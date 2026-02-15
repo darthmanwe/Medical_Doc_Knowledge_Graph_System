@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  neo4j:
+    image: neo4j:5.26.0
+    container_name: medical_kg_neo4j
+    ports:
+      - "7474:7474"   # Browser
+      - "7687:7687"   # Bolt
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:-changeme}
+      NEO4J_PLUGINS: '["apoc", "apoc-extended"]'
+      NEO4J_dbms_security_procedures_unrestricted: "apoc.*"
+      NEO4J_dbms_security_procedures_allowlist: "apoc.*"
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    healthcheck:
+      test: ["CMD", "neo4j", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: medical_kg_app
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      NEO4J_URI: bolt://neo4j:7687
+      CHROMA_PERSIST_DIR: /app/chroma_data
+    volumes:
+      - ./Task_Files:/app/Task_Files:ro
+      - chroma_data:/app/chroma_data
+    depends_on:
+      neo4j:
+        condition: service_healthy
+
+volumes:
+  neo4j_data:
+  neo4j_logs:
+  chroma_data:

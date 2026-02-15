@@ -1,0 +1,42 @@
+{
+  "node_count": 48,
+  "relationship_count": 72,
+  "label_counts": [
+    {
+      "label": "Symptom",
+      "count": 12
+    },
+    {
+      "label": "SourceChunk",
+      "count": 8
+    },
+    {
+      "label": "Procedure",
+      "count": 7
+    },
+    {
+      "label": "RiskFactor",
+      "count": 6
+    },
+    {
+      "label": "Condition",
+      "count": 5
+    },
+    {
+      "label": "Vital",
+      "count": 4
+    },
+    {
+      "label": "Medication",
+      "count": 3
+    },
+    {
+      "label": "Document",
+      "count": 2
+    },
+    {
+      "label": "Patient",
+      "count": 1
+    }
+  ]
+}

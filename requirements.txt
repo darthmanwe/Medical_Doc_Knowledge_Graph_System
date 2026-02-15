@@ -1,0 +1,31 @@
+# Core framework
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+python-dotenv==1.0.1
+
+# Neo4j
+neo4j==5.27.0
+
+# Anthropic LLM
+anthropic==0.43.0
+tenacity==9.0.0
+
+# Embeddings
+sentence-transformers==3.3.1
+torch>=2.1.0
+
+# Vector store (baseline comparison)
+chromadb==0.5.23
+
+# NLP / Entity extraction
+spacy==3.7.6
+scispacy==0.5.5
+
+# Entity resolution
+rapidfuzz==3.11.0
+
+# Utilities
+numpy>=1.26.0
+python-multipart==0.0.20

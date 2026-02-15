@@ -1,1 +1,40 @@
+# Environment
 .env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# ChromaDB local store
+.chroma/
+chroma_data/
+
+# Model caches
+models_cache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Neo4j local data
+neo4j_data/
+neo4j_logs/
+
+# Evaluation outputs
+evaluation_reports/
