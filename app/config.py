@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     retrieval_top_k: int = 5
     retrieval_score_threshold: float = 0.35
     retrieval_max_hops: int = 3
+    rerank_threshold: float = 0.25  # minimum relevance score to keep context elements
 
     # ── ChromaDB ───────────────────────────────────────────────
     chroma_persist_dir: str = "./chroma_data"

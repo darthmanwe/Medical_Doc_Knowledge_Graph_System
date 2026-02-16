@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-15 23:13:49.111943",
+  "timestamp": "2026-02-16T00:07:25.411377",
   "records": [
     {
       "question": "What is the patient's blood pressure?",
@@ -14,24 +14,24 @@
         "answer_correctness": 0.950965655492189,
         "citation_accuracy": null
       },
-      "retrieval_time_ms": 8295.81,
-      "generation_time_ms": 2639.09
+      "retrieval_time_ms": 184.58,
+      "generation_time_ms": 2397.73
     },
     {
       "question": "What is the patient's blood pressure?",
       "category": "single_hop",
       "strategy": "graph",
-      "answer": "Based on the provided Knowledge Graph context, the patient's blood pressure is **152/88 mmHg**.\n\nThis information is directly documented in the vital signs from the objective section of the clinical note. The blood pressure reading of 152/88 is consistently reported across multiple chunks (Chunks 2-8) along with other vital signs:\n- Blood Pressure (BP): 152/88 mmHg\n- Heart Rate (HR): 78 beats per minute\n- Respiratory Rate (RR): 16 breaths per minute  \n- Oxygen Saturation (SpO2): 97%\n\n**Source Citation:** This blood pressure measurement is documented in the [Objective] section of Task_Files/soap_notes.txt.\n\n**Clinical Context:** The Knowledge Graph also shows that Peter Julius Fern has a diagnosis of hypertension with \"borderline control\" and \"adherence inconsistent\" (Chunk 1), which is consistent with this elevated blood pressure reading. The systolic pressure of 152 mmHg indicates stage 2 hypertension (\u2265140 mmHg systolic), supporting the clinical assessment of suboptimal blood pressure control.\n\n**Graph Relationship:** Peter Julius Fern -[HAS_CONDITION]-> Hypertension, and he -[TAKES_MEDICATION]-> Antihypertensives, indicating ongoing treatment for this condition.",
+      "answer": "The patient's blood pressure is 152/88 mmHg.\n\n**Source:** Vital signs from [Objective] in Task_Files/soap_notes.txt: \"BP 152/88, HR 78, RR 16, SpO2 97%.\"",
       "expected_answer": "The patient's blood pressure is 152/88 mmHg.",
       "scores": {
         "faithfulness": 1.0,
-        "context_precision": 0.3,
+        "context_precision": 1.0,
         "context_recall": 1.0,
-        "answer_correctness": 0.9086406556246376,
-        "citation_accuracy": 0.4117647058823529
+        "answer_correctness": 0.9569633965236863,
+        "citation_accuracy": 0.0
       },
-      "retrieval_time_ms": 136.28,
-      "generation_time_ms": 7139.49
+      "retrieval_time_ms": 266.86,
+      "generation_time_ms": 2579.51
     },
     {
       "question": "What is the patient's heart rate and oxygen saturation?",
@@ -46,24 +46,24 @@
         "answer_correctness": 0.9718920053464706,
         "citation_accuracy": null
       },
-      "retrieval_time_ms": 14.9,
-      "generation_time_ms": 2505.46
+      "retrieval_time_ms": 10.2,
+      "generation_time_ms": 8553.39
     },
     {
       "question": "What is the patient's heart rate and oxygen saturation?",
       "category": "single_hop",
       "strategy": "graph",
-      "answer": "Based on the provided Knowledge Graph context, I can identify the patient's vital signs from the clinical documentation.\n\n## Patient's Vital Signs\n\n**Heart Rate (HR):** 78 beats per minute\n**Oxygen Saturation (SpO2):** 97%\n\n## Source Citation\n\nThis information is documented in the objective section of the clinical note, as cited in chunks 1-7 of the source text: \"BP 152/88, HR 78, RR 16, SpO2 97%. Appears well, no acute distress.\"\n\nThe vital signs are recorded from the [Objective] section in Task_Files/soap_notes.txt, which represents the physical examination findings during Peter Fern's clinical visit.\n\n## Additional Context\n\nThese vital signs were recorded alongside other objective findings including:\n- Blood pressure: 152/88 mmHg (elevated)\n- Respiratory rate: 16 breaths per minute\n- Patient appeared well with no acute distress\n\nThe heart rate of 78 bpm falls within normal limits (60-100 bpm for adults), and the oxygen saturation of 97% is also within the normal range (\u226595% is considered normal).",
+      "answer": "Based on the provided context:\n\n**Heart Rate:** 78 beats per minute\n**Oxygen Saturation (SpO2):** 97%\n\n*Source: [Objective] section in Task_Files/soap_notes.txt - \"BP 152/88, HR 78, RR 16, SpO2 97%\"*",
       "expected_answer": "Heart rate is 78 bpm and oxygen saturation (SpO2) is 97%.",
       "scores": {
         "faithfulness": 1.0,
-        "context_precision": 0.3,
+        "context_precision": 1.0,
         "context_recall": 1.0,
-        "answer_correctness": 0.8793682242614675,
+        "answer_correctness": 0.9495319004338287,
         "citation_accuracy": 0.0
       },
-      "retrieval_time_ms": 78.37,
-      "generation_time_ms": 6026.87
+      "retrieval_time_ms": 283.57,
+      "generation_time_ms": 2037.11
     },
     {
       "question": "What is the patient's age and sex?",
@@ -78,24 +78,24 @@
         "answer_correctness": 0.8863724477511066,
         "citation_accuracy": null
       },
-      "retrieval_time_ms": 15.82,
-      "generation_time_ms": 1923.68
+      "retrieval_time_ms": 10.74,
+      "generation_time_ms": 1990.26
     },
     {
       "question": "What is the patient's age and sex?",
       "category": "single_hop",
       "strategy": "graph",
-      "answer": "Based on the Knowledge Graph context, the patient's age and sex are:\n\n**Age: 62 years old**\n**Sex: Male**\n\n## Source Citations and Evidence:\n\n**Age:**\n- The patient's date of birth is April 15, 1960, as documented in the demographics file [Demographics] in Task_Files/demographics.json\n- The current age of 62 is explicitly stated in the clinical note: \"Peter Fern (62M)\" [Subjective] in Task_Files/soap_notes.txt\n- This is also captured as a risk factor entity \"Age 62\" with source \"patient demographics\"\n\n**Sex:**\n- The patient's male gender is indicated by the \"(62M)\" notation in the clinical documentation [Subjective] in Task_Files/soap_notes.txt\n- This is represented in the Knowledge Graph as the entity \"Male gender\" with source \"patient demographics\"\n\n## Knowledge Graph Relationships:\n- Peter Julius Fern -[HAS_RISK_FACTOR]-> Male gender\n- Peter Julius Fern -[HAS_RISK_FACTOR]-> Age 62\n\nThe age and male sex are both considered cardiovascular risk factors in the context of this patient's presentation with suspected stable angina, which explains why they appear as risk factor entities in the Knowledge Graph structure.",
+      "answer": "Based on the provided context:\n\n**Age:** 62 years old\n- Born April 15, 1960 (Demographics section, Task_Files/demographics.json)\n- Current age confirmed as 62 in the Graph Context\n\n**Sex:** Male\n- Male gender identified as a risk factor in the Graph Context (patient demographics source)\n\nThe patient Peter Julius Fern is a 62-year-old male, with both age and male gender noted as cardiovascular risk factors in his clinical assessment.",
       "expected_answer": "The patient is a 62-year-old male.",
       "scores": {
-        "faithfulness": 1.0,
-        "context_precision": 0.7,
-        "context_recall": 1.0,
-        "answer_correctness": 0.8413247136076702,
-        "citation_accuracy": 0.03225806451612903
+        "faithfulness": 0.7,
+        "context_precision": 0.8,
+        "context_recall": 0.5,
+        "answer_correctness": 0.7778396046787073,
+        "citation_accuracy": 1.0
       },
-      "retrieval_time_ms": 264.18,
-      "generation_time_ms": 6871.45
+      "retrieval_time_ms": 262.39,
+      "generation_time_ms": 3457.53
     },
     {
       "question": "What conditions could explain the patient's exertional symptoms given their risk factors?",
@@ -110,24 +110,24 @@
         "answer_correctness": 0.8557729183639732,
         "citation_accuracy": null
       },
-      "retrieval_time_ms": 14.15,
-      "generation_time_ms": 6182.84
+      "retrieval_time_ms": 12.53,
+      "generation_time_ms": 6153.72
     },
     {
       "question": "What conditions could explain the patient's exertional symptoms given their risk factors?",
       "category": "multi_hop",
       "strategy": "graph",
-      "answer": "Based on the Knowledge Graph context, several conditions could explain Peter Fern's exertional symptoms given his risk factors:\n\n## Primary Consideration: Stable Angina\n\nThe most likely condition is **stable angina**, as directly stated in the clinical assessment. According to the Assessment section in Task_Files/soap_notes.txt: \"Likely stable angina given exertional pattern and resolution w/ rest. Multiple risk factors: HTN, age, family hx (father MI at 58).\"\n\n### Supporting Risk Factors:\nThe Knowledge Graph shows Peter Fern has multiple cardiovascular risk factors through these relationships:\n- Peter Julius Fern -[HAS_RISK_FACTOR]-> Age 62 (from Subjective section)\n- Peter Julius Fern -[HAS_RISK_FACTOR]-> Male gender (from Subjective section)  \n- Peter Julius Fern -[HAS_RISK_FACTOR]-> Family History of Myocardial Infarction (father had MI at 58, from Assessment section)\n- Peter Julius Fern -[HAS_CONDITION]-> Hypertension with \"borderline control; adherence inconsistent\" (from Assessment section)\n\n### Symptom Pattern Supporting Angina:\nThe exertional chest tightness follows a classic anginal pattern:\n- Peter Julius Fern -[EXHIBITS_SYMPTOM]-> Chest tightness with \"pressure, not sharp\" quality lasting \"2-4 minutes\"\n- Peter Julius Fern -[EXHIBITS_SYMPTOM]-> Exertional discomfort\n- Symptoms occur \"2-3x/week when walking uphill or carrying groceries\" and are \"relieved by rest\" (from Subjective section)\n\n## Conditions Ruled Out:\n\n**Gastroesophageal Reflux Disease (GERD)** is explicitly considered unlikely despite the patient having this condition. The relationship Peter Julius Fern -[HAS_CONDITION]-> Gastroesophageal Reflux Disease exists, but the Assessment section states: \"GERD \u2014 chronic but unlikely to explain exertional symptoms.\" The patient also reports this feels \"different and not meal-related.\"\n\n## Reasoning Path Through the Graph:\n\nThe diagnostic reasoning follows this path:\n1. **Risk Factors** (Age 62, Male gender, Family History of MI, Hypertension) \u2192 **Increased cardiovascular risk**\n2. **Exertional Symptoms** (Chest tightness with exertion, relieved by rest) \u2192 **Classic anginal pattern**  \n3. **Multiple Risk Factors + Exertional Pattern** \u2192 **Likely stable angina**\n\nThe clinical plan supports this assessment by prescribing nitroglycerin for exertional discomfort and ordering perfusion imaging to further evaluate cardiac function (from Plan section in Task_Files/soap_notes.txt).\n\n**Note**: The context doesn't contain enough information about other potential conditions like pulmonary causes or musculoskeletal etiologies that could theoretically cause exertional symptoms, as these are not represented in the provided Knowledge Graph entities and relationships.",
+      "answer": "Based on the provided context, the primary condition that could explain the patient's exertional symptoms is **stable angina**.\n\n**Primary Diagnosis:**\n- **Stable angina** - The assessment states \"Likely stable angina given exertional pattern and resolution w/ rest\" with multiple supporting risk factors including hypertension (HTN), age (62), and family history (father had MI at 58) [Assessment section, Task_Files/soap_notes.txt].\n\n**Excluded Condition:**\n- **Gastroesophageal Reflux Disease (GERD)** - While the patient has a history of GERD, the assessment notes it is \"chronic but unlikely to explain exertional symptoms\" [Assessment section, Task_Files/soap_notes.txt]. The patient also reports this feels different from GERD and is not meal-related.\n\nThe exertional pattern (symptoms occurring 2-3x/week with uphill walking or carrying groceries, lasting 2-4 minutes, relieved by rest) combined with the patient's cardiovascular risk factors strongly supports stable angina as the most likely explanation for the exertional chest tightness.",
       "expected_answer": "Stable angina is the likely diagnosis given the exertional pattern (chest tightness 2-3x/week when walking uphill or carrying groceries, resolves with rest) combined with multiple risk factors: hypertension, age 62, and family history of myocardial infarction at age 58.",
       "scores": {
-        "faithfulness": 0.9,
-        "context_precision": 0.7,
+        "faithfulness": 1.0,
+        "context_precision": 1.0,
         "context_recall": 1.0,
-        "answer_correctness": 0.7366546333456467,
-        "citation_accuracy": 0.9629629629629629
+        "answer_correctness": 0.8147129384589458,
+        "citation_accuracy": 1.0
       },
-      "retrieval_time_ms": 92.11,
-      "generation_time_ms": 13118.02
+      "retrieval_time_ms": 276.34,
+      "generation_time_ms": 5781.88
     },
     {
       "question": "How does the patient's medication adherence relate to their blood pressure control?",
@@ -142,24 +142,24 @@
         "answer_correctness": 0.8891368126499248,
         "citation_accuracy": null
       },
-      "retrieval_time_ms": 12.45,
-      "generation_time_ms": 5661.6
+      "retrieval_time_ms": 11.05,
+      "generation_time_ms": 6710.05
     },
     {
       "question": "How does the patient's medication adherence relate to their blood pressure control?",
       "category": "multi_hop",
       "strategy": "graph",
-      "answer": "Based on the Knowledge Graph context, there is a clear relationship between the patient's medication adherence and blood pressure control:\n\n## Direct Evidence from Source Documents\n\n**Poor Medication Adherence:**\nThe patient \"admits occasionally missing BP meds\" (blood pressure medications), as documented in the Subjective section of the SOAP notes [Task_Files/soap_notes.txt].\n\n**Suboptimal Blood Pressure Control:**\nThe Assessment section explicitly states \"Hypertension \u2014 borderline control; adherence inconsistent\" [Task_Files/soap_notes.txt]. The objective vital signs show elevated blood pressure at 152/88 mmHg [Task_Files/soap_notes.txt].\n\n## Knowledge Graph Relationships\n\nThe reasoning path through the graph shows:\n- Peter Julius Fern -[TAKES_MEDICATION]-> Antihypertensives\n- Peter Julius Fern -[TAKES_MEDICATION]-> Blood Pressure medications  \n- Peter Julius Fern -[HAS_CONDITION]-> Hypertension (status=borderline control)\n\n## Clinical Plan Addressing This Relationship\n\nThe Plan section directly addresses this connection by recommending to \"Continue antihypertensives; reinforce daily adherence\" [Task_Files/soap_notes.txt], appearing multiple times in the treatment plan, indicating this is a priority intervention.\n\n## Conclusion\n\nThe patient's inconsistent adherence to blood pressure medications directly correlates with their borderline hypertension control. The elevated blood pressure reading (152/88 mmHg) combined with the documented medication non-adherence demonstrates how poor compliance leads to suboptimal therapeutic outcomes. The physician's emphasis on reinforcing daily adherence in the treatment plan confirms this causal relationship between medication compliance and blood pressure management.",
+      "answer": "Based on the provided context, there is a direct relationship between the patient's poor medication adherence and suboptimal blood pressure control.\n\n**Medication Adherence Issues:**\n- Patient \"admits occasionally missing BP meds\" (from [Subjective] in Task_Files/soap_notes.txt)\n- Assessment notes \"adherence inconsistent\" (from [Assessment] in Task_Files/soap_notes.txt)\n\n**Blood Pressure Control:**\n- Hypertension (HTN) shows \"borderline control\" (from [Assessment] in Task_Files/soap_notes.txt)\n- Current BP reading is elevated at 152/88 mmHg (from [Objective] in Task_Files/soap_notes.txt)\n\n**Clinical Response:**\nThe plan specifically addresses this relationship by instructing to \"Continue antihypertensives; reinforce daily adherence\" (from [Plan] in Task_Files/soap_notes.txt), indicating the healthcare provider recognizes that improving medication compliance is essential for achieving better blood pressure control.\n\nThe graph context confirms this relationship: Patient 4:7d5dc0 -[TAKES_MEDICATION]-> Antihypertensives, with the medication instruction emphasizing \"Continue daily adherence.\"",
       "expected_answer": "The patient admits to occasionally missing blood pressure medications. This inconsistent adherence is directly related to the borderline hypertension control noted in the assessment, with a current reading of 152/88.",
       "scores": {
-        "faithfulness": 0.9,
-        "context_precision": 0.7,
+        "faithfulness": 1.0,
+        "context_precision": 1.0,
         "context_recall": 1.0,
-        "answer_correctness": 0.8298839561156253,
-        "citation_accuracy": 0.6470588235294118
+        "answer_correctness": 0.924453263503908,
+        "citation_accuracy": 1.0
       },
-      "retrieval_time_ms": 76.09,
-      "generation_time_ms": 8470.69
+      "retrieval_time_ms": 318.18,
+      "generation_time_ms": 5688.39
     },
     {
       "question": "What source section mentions the patient's medication adherence?",
@@ -174,24 +174,24 @@
         "answer_correctness": 0.157691828900627,
         "citation_accuracy": null
       },
-      "retrieval_time_ms": 15.56,
-      "generation_time_ms": 3005.64
+      "retrieval_time_ms": 11.24,
+      "generation_time_ms": 2351.64
     },
     {
       "question": "What source section mentions the patient's medication adherence?",
       "category": "provenance",
       "strategy": "graph",
-      "answer": "Based on the Knowledge Graph context, the patient's medication adherence is mentioned in multiple source sections:\n\n## Primary Source Sections:\n\n1. **Assessment Section** - This section identifies the adherence issue:\n   - \"Hypertension \u2014 borderline control; adherence inconsistent\" (Chunk 1)\n   - Source: [Assessment] in Task_Files/soap_notes.txt\n\n2. **Plan Section** - This section addresses the adherence issue with specific instructions:\n   - \"Continue antihypertensives; reinforce daily adherence\" (Chunks 2-13)\n   - Source: [Plan] in Task_Files/soap_notes.txt\n\n## Knowledge Graph Reasoning Path:\n\nThe medication adherence information flows through the following entity relationships:\n\n**Peter Julius Fern -[TAKES_MEDICATION]-> Antihypertensives**\n\nWhere the Antihypertensives entity has the instruction: \"Continue daily adherence\"\n\n## Clinical Context:\n\nThe Assessment section establishes that the patient has **inconsistent adherence** to antihypertensive medications, which is contributing to borderline blood pressure control. The Plan section then directly addresses this by instructing to \"reinforce daily adherence\" as part of the ongoing treatment strategy.\n\nThis adherence issue is clinically significant as it relates to the patient's hypertension management and overall cardiovascular risk, especially given the pending results of the treadmill myocardial perfusion scan and the patient's exertional chest symptoms.\n\n**Source Citations:** \n- Entity 'Hypertension' from [Assessment] in Task_Files/soap_notes.txt\n- Entity 'Antihypertensives' medication instructions from [Plan] in Task_Files/soap_notes.txt",
+      "answer": "The patient's medication adherence is mentioned in the **Assessment** section, which states \"Hypertension \u2014 borderline control; adherence inconsistent.\"\n\n**Source:** Assessment section in Task_Files/soap_notes.txt",
       "expected_answer": "The Subjective section mentions that the patient admits occasionally missing BP meds.",
       "scores": {
-        "faithfulness": 0.8,
+        "faithfulness": 1.0,
         "context_precision": 0.3,
         "context_recall": 0.0,
-        "answer_correctness": 0.12819062879743762,
-        "citation_accuracy": 0.23333333333333334
+        "answer_correctness": 0.30421277591698104,
+        "citation_accuracy": 0.0
       },
-      "retrieval_time_ms": 260.44,
-      "generation_time_ms": 7709.58
+      "retrieval_time_ms": 262.44,
+      "generation_time_ms": 2048.29
     },
     {
       "question": "Which section of the note contains the family history information?",
@@ -206,24 +206,24 @@
         "answer_correctness": 0.9269978206165964,
         "citation_accuracy": null
       },
-      "retrieval_time_ms": 13.22,
-      "generation_time_ms": 2144.18
+      "retrieval_time_ms": 10.67,
+      "generation_time_ms": 2312.11
     },
     {
       "question": "Which section of the note contains the family history information?",
       "category": "provenance",
       "strategy": "graph",
-      "answer": "Based on the Knowledge Graph context, the family history information is contained in the **Assessment** section of the SOAP note.\n\n**Evidence from the Knowledge Graph:**\n\nThe entity 'Family History of Myocardial Infarction' is specifically cited as coming from the **[Assessment]** section in Task_Files/soap_notes.txt with 100% confidence.\n\n**Source Citation:**\n- Entity 'Family History of Myocardial Infarction' from [Assessment] in Task_Files/soap_notes.txt (confidence: 1.00): \"1. Likely stable angina given exertional pattern and resolution w/ rest. Multiple risk factors: HTN, age, family hx (father MI at 58).\"\n\n**Reasoning Path:**\nThe Knowledge Graph shows that Peter Julius Fern has a relationship with the risk factor \"Family History of Myocardial Infarction\" through the path:\n- Peter Julius Fern -[HAS_RISK_FACTOR]-> Family History of Myocardial Infarction\n\nThe family history specifically mentions that the patient's father had a myocardial infarction (MI) at age 58, which is documented in the Assessment section as part of the clinical reasoning for the likely diagnosis of stable angina.\n\nThis placement in the Assessment section is clinically appropriate, as family history is being used as supporting evidence for the diagnostic impression rather than being reported as part of the patient's subjective history or objective findings.",
+      "answer": "The family history information is contained in **Chunk 2**, which states \"Multiple risk factors: HTN, age, family hx (father MI at 58).\"\n\nThis section indicates the patient has a family history of myocardial infarction (MI), specifically that the father had an MI at age 58.\n\n**Source:** Chunk 2 from the provided clinical note context.",
       "expected_answer": "The Assessment section mentions family history: father had a myocardial infarction at age 58.",
       "scores": {
         "faithfulness": 1.0,
-        "context_precision": 0.3,
+        "context_precision": 1.0,
         "context_recall": 1.0,
-        "answer_correctness": 0.9057597048958699,
-        "citation_accuracy": 0.3333333333333333
+        "answer_correctness": 0.7693372127189309,
+        "citation_accuracy": null
       },
-      "retrieval_time_ms": 105.35,
-      "generation_time_ms": 6653.37
+      "retrieval_time_ms": 268.96,
+      "generation_time_ms": 2544.03
     },
     {
       "question": "What medications are prescribed or planned for the patient's conditions?",
@@ -238,24 +238,24 @@
         "answer_correctness": 0.8248871120599597,
         "citation_accuracy": null
       },
-      "retrieval_time_ms": 13.81,
-      "generation_time_ms": 5399.46
+      "retrieval_time_ms": 10.61,
+      "generation_time_ms": 5626.6
     },
     {
       "question": "What medications are prescribed or planned for the patient's conditions?",
       "category": "relationship",
       "strategy": "graph",
-      "answer": "Based on the Knowledge Graph context, I can identify the following medications that are prescribed or planned for the patient's conditions:\n\n## Current Medications\n\n**1. Antihypertensives**\n- **Status**: Currently prescribed (continue existing therapy)\n- **Indication**: Hypertension management\n- **Evidence**: The relationship shows \"Peter Julius Fern -[TAKES_MEDICATION]-> Antihypertensives\"\n- **Source**: Plan section in Task_Files/soap_notes.txt - \"Continue antihypertensives; reinforce daily adherence\"\n\n**2. Nitroglycerin Sublingual (SL)**\n- **Status**: Newly provided/prescribed\n- **Indication**: Exertional discomfort (likely stable angina)\n- **Evidence**: The relationship shows \"Peter Julius Fern -[TAKES_MEDICATION]-> Nitroglycerin\"\n- **Source**: Plan section in Task_Files/soap_notes.txt - \"Provide nitroglycerin SL for exertional discomfort; reviewed use + when to call EMS\"\n\n## Reasoning Path Through the Graph\n\nThe medication prescriptions align with the patient's diagnosed conditions:\n\n1. **Peter Julius Fern -[HAS_CONDITION]-> Hypertension** \u2192 **Peter Julius Fern -[TAKES_MEDICATION]-> Antihypertensives**\n   - The assessment notes \"Hypertension \u2014 borderline control; adherence inconsistent\" (Assessment section, Task_Files/soap_notes.txt)\n\n2. **Peter Julius Fern -[EXHIBITS_SYMPTOM]-> Exertional discomfort** \u2192 **Peter Julius Fern -[TAKES_MEDICATION]-> Nitroglycerin**\n   - The assessment indicates \"Likely stable angina given exertional pattern and resolution w/ rest\" (Assessment section, Task_Files/soap_notes.txt)\n\n## Clinical Context\n\nThe medication plan addresses the patient's primary cardiovascular conditions:\n- **Antihypertensives** for blood pressure control (current BP 152/88 indicates suboptimal control)\n- **Nitroglycerin SL** for acute management of anginal symptoms during exertion\n\nThe plan emphasizes medication adherence reinforcement for antihypertensives, suggesting this is an ongoing issue contributing to borderline hypertension control.\n\n**Note**: While hyperlipidemia is mentioned as a condition (\"Hyperlipidemia \u2014 labs overdue\"), no specific lipid-lowering medications are mentioned in the current plan, though a fasting lipid panel is ordered to reassess this condition.",
+      "answer": "Based on the provided context, the following medications are prescribed or planned for the patient:\n\n## Current Medications:\n\n1. **Antihypertensives** - Patient is instructed to continue daily adherence for hypertension management\n   - Source: [Plan] in Task_Files/soap_notes.txt\n\n2. **Nitroglycerin sublingual (SL)** - Prescribed for exertional discomfort, with patient education on proper use and when to call EMS\n   - Source: [Plan] in Task_Files/soap_notes.txt\n\n## Planned Laboratory Work:\n- **Fasting lipid panel** - Ordered before next visit for hyperlipidemia management (labs noted as overdue)\n   - Source: [Plan] in Task_Files/soap_notes.txt\n\nThe graph context confirms that Peter Julius Fern takes both Antihypertensives and Nitroglycerin: Peter Julius Fern -[TAKES_MEDICATION]-> Antihypertensives and Peter Julius Fern -[TAKES_MEDICATION]-> Nitroglycerin.\n\nThe medications address the patient's diagnosed conditions of hypertension (borderline control with inconsistent adherence) and likely stable angina with multiple cardiovascular risk factors.",
       "expected_answer": "The patient is to continue antihypertensives for hypertension (with reinforced daily adherence) and was provided sublingual nitroglycerin for exertional chest discomfort. A fasting lipid panel was also ordered.",
       "scores": {
-        "faithfulness": 0.9,
+        "faithfulness": 1.0,
         "context_precision": 1.0,
         "context_recall": 1.0,
-        "answer_correctness": 0.7367995895779639,
-        "citation_accuracy": 0.7741935483870968
+        "answer_correctness": 0.8360905272542231,
+        "citation_accuracy": 1.0
       },
-      "retrieval_time_ms": 94.68,
-      "generation_time_ms": 10825.13
+      "retrieval_time_ms": 288.85,
+      "generation_time_ms": 5598.27
     },
     {
       "question": "What procedures are pending or scheduled for the patient?",
@@ -270,24 +270,24 @@
         "answer_correctness": 0.8817921383911245,
         "citation_accuracy": null
       },
-      "retrieval_time_ms": 13.46,
-      "generation_time_ms": 4048.71
+      "retrieval_time_ms": 11.39,
+      "generation_time_ms": 4044.86
     },
     {
       "question": "What procedures are pending or scheduled for the patient?",
       "category": "relationship",
       "strategy": "graph",
-      "answer": "Based on the Knowledge Graph context, several procedures are pending or scheduled for Peter Julius Fern:\n\n## Pending Procedures:\n\n1. **Perfusion imaging review** - The treadmill myocardial perfusion scan has been completed but the final report is pending review. This is documented in the Objective section: \"Completed treadmill myocardial perfusion scan yesterday; report pending final review\" [Source: Objective section, Task_Files/soap_notes.txt].\n\n## Scheduled Procedures:\n\n2. **Fasting lipid panel** - Ordered before the next visit as stated in the Plan section: \"Order fasting lipid panel before next visit\" [Source: Plan section, Task_Files/soap_notes.txt]. The Knowledge Graph shows this entity has status \"Ordered.\"\n\n3. **Follow-up appointment** - Scheduled in 1-2 weeks to review scan results and discuss possible cardiology referral: \"Schedule f/u in 1\u20132 wks to review scan results and discuss possible cardiology referral\" [Source: Plan section, Task_Files/soap_notes.txt].\n\n4. **Possible cardiology referral** - This is contingent on the perfusion imaging results and will be discussed at the follow-up visit. The Knowledge Graph shows this entity has status \"Possible.\"\n\n## Reasoning Path:\nThe relationships in the Knowledge Graph show: Peter Julius Fern -[SCHEDULED_FOR]-> Perfusion imaging, Peter Julius Fern -[SCHEDULED_FOR]-> Fasting lipid panel, and Peter Julius Fern -[SCHEDULED_FOR]-> Laboratory tests, which supports the documented procedures.\n\nThe context indicates these procedures are part of the workup for his exertional chest tightness symptoms and management of his hypertension and hyperlipidemia.",
+      "answer": "Based on the provided context, the following procedures are pending or scheduled for the patient:\n\n**Pending:**\n- **Perfusion imaging** - Status: Pending review. The treadmill myocardial perfusion scan was completed yesterday but the report is pending final review (Source: Objective section, Task_Files/soap_notes.txt)\n\n**Scheduled:**\n- **Follow-up appointment** - Scheduled in 1-2 weeks to review scan results and discuss possible cardiology referral\n- **Laboratory tests** - Fasting lipid panel ordered before next visit, as labs are overdue for hyperlipidemia monitoring\n\nThe graph context confirms these three procedures (Follow-up, Laboratory tests, and Perfusion imaging) are all connected to the patient via SCHEDULED_FOR relationships.\n\n*Sources: Task_Files/soap_notes.txt from Objective and Plan sections*",
       "expected_answer": "A treadmill myocardial perfusion scan was completed yesterday but the report is pending final review. A follow-up visit is scheduled in 1-2 weeks to review scan results and discuss possible cardiology referral.",
       "scores": {
-        "faithfulness": 0.8,
-        "context_precision": 0.9,
+        "faithfulness": 0.9,
+        "context_precision": 0.8,
         "context_recall": 1.0,
-        "answer_correctness": 0.6711659791304544,
-        "citation_accuracy": 0.8125
+        "answer_correctness": 0.6930790739139253,
+        "citation_accuracy": 1.0
       },
-      "retrieval_time_ms": 76.15,
-      "generation_time_ms": 8365.69
+      "retrieval_time_ms": 250.62,
+      "generation_time_ms": 4777.16
     },
     {
       "question": "What is the patient's health card number and postal code?",
@@ -302,24 +302,24 @@
         "answer_correctness": 0.9452404431638493,
         "citation_accuracy": null
       },
-      "retrieval_time_ms": 14.31,
-      "generation_time_ms": 2001.76
+      "retrieval_time_ms": 10.63,
+      "generation_time_ms": 2356.98
     },
     {
       "question": "What is the patient's health card number and postal code?",
       "category": "cross_reference",
       "strategy": "graph",
-      "answer": "Based on the Knowledge Graph context, I can provide the following information for patient Peter Julius Fern:\n\n**Health Card Number:** 9696178816\n**Postal Code:** K7L 3V8\n\n## Source Citation and Reasoning:\n\nThis information is directly extracted from the patient demographics entity in the Knowledge Graph. The entity \"(Patient) Peter Julius Fern\" contains the attributes:\n- `health_card=9696178816` \n- `address_postal=K7L 3V8`\n\n**Provenance Citation:** This data comes from the [Demographics] section in Task_Files/demographics.json, as indicated in the source citations with confidence level 1.00.\n\nThe reasoning path is straightforward: Patient Peter Julius Fern -[HAS_DEMOGRAPHIC_INFO]-> Health Card Number (9696178816) and Postal Code (K7L 3V8).\n\nThis information was extracted directly from the structured demographic data rather than inferred from clinical notes, ensuring high accuracy and reliability.",
+      "answer": "Based on the provided context:\n\n**Health Card Number:** 9696178816\n**Postal Code:** K7L 3V8\n\n**Source:** Demographics section in Task_Files/demographics.json, which contains the patient's complete demographic information including health card number and address details.",
       "expected_answer": "Health card number is 9696178816 and postal code is K7L 3V8.",
       "scores": {
         "faithfulness": 1.0,
-        "context_precision": 0.1,
+        "context_precision": 0.33,
         "context_recall": 1.0,
-        "answer_correctness": 0.8418127648403058,
-        "citation_accuracy": 0.030303030303030304
+        "answer_correctness": 0.9606051399824038,
+        "citation_accuracy": 0.3333333333333333
       },
-      "retrieval_time_ms": 120.76,
-      "generation_time_ms": 6271.73
+      "retrieval_time_ms": 328.01,
+      "generation_time_ms": 2168.3
     },
     {
       "question": "What is the full name and contact information of the patient?",
@@ -334,24 +334,24 @@
         "answer_correctness": 0.8850906770808556,
         "citation_accuracy": null
       },
-      "retrieval_time_ms": 13.77,
-      "generation_time_ms": 2876.71
+      "retrieval_time_ms": 11.26,
+      "generation_time_ms": 3080.02
     },
     {
       "question": "What is the full name and contact information of the patient?",
       "category": "cross_reference",
       "strategy": "graph",
-      "answer": "Based on the Knowledge Graph context, I can provide the complete patient identification and contact information:\n\n## Patient Identity and Contact Information\n\n**Full Name:** Peter Julius Fern\n\n**Contact Information:**\n- **Home Phone:** 613-6565-890\n- **Mobile Phone:** 647-666-8888\n- **Email:** peter.fern@email.com\n\n**Address:**\n- 45 Maple Ave\n- Toronto, ON K7L 3V8\n- Canada\n\n**Medical Identifiers:**\n- **Date of Birth:** April 15, 1960\n- **Patient Number:** XXX34-6565-890\n- **Health Card Number:** 9696178816\n\n## Source Citation\n\nThis information is directly extracted from the Patient entity \"Peter Julius Fern\" in the Knowledge Graph, which sources from the [Demographics] section in Task_Files/demographics.json with 100% confidence. The source text shows this is structured demographic data containing all patient identification and contact details.\n\n## Reasoning Path\n\nThe information follows a direct path: **Patient Entity \u2192 Demographics Data**, where all contact and identification information is contained within the single patient entity record. No complex graph traversal was required as this is foundational demographic information stored as entity attributes.\n\nAll medical abbreviations expanded: ON = Ontario (province).",
+      "answer": "Based on the provided context:\n\n**Full Name:** Peter Julius Fern\n\n**Contact Information:**\n- Home Phone: 613-6565-890\n- Mobile Phone: 647-666-8888\n- Email: peter.fern@email.com\n- Address: 45 Maple Ave, Toronto, ON K7L 3V8, Canada\n\n**Additional Identifiers:**\n- Date of Birth: 1960-04-15\n- Patient Number: XXX34-6565-890\n- Health Card Number: 9696178816\n\n**Source:** Demographics section in Task_Files/demographics.json (confidence: 1.00)",
       "expected_answer": "Peter Julius Fern. Home phone: 613-6565-890, mobile: 647-666-8888, email: peter.fern@email.com, address: 45 Maple Ave, Toronto, ON K7L 3V8, Canada.",
       "scores": {
         "faithfulness": 1.0,
-        "context_precision": 0.1,
+        "context_precision": 0.33,
         "context_recall": 1.0,
-        "answer_correctness": 0.795889476321847,
-        "citation_accuracy": 0.21212121212121213
+        "answer_correctness": 0.8444136095087027,
+        "citation_accuracy": 0.3333333333333333
       },
-      "retrieval_time_ms": 107.63,
-      "generation_time_ms": 7329.27
+      "retrieval_time_ms": 285.31,
+      "generation_time_ms": 2673.37
     }
   ],
   "vector_avg_scores": {
@@ -362,11 +362,11 @@
     "citation_accuracy": null
   },
   "graph_avg_scores": {
-    "faithfulness": 0.9363636363636364,
-    "context_precision": 0.49090909090909085,
-    "context_recall": 0.9090909090909091,
-    "answer_correctness": 0.7523173024108114,
-    "citation_accuracy": 0.40452991039716935
+    "faithfulness": 0.9636363636363636,
+    "context_precision": 0.7781818181818182,
+    "context_recall": 0.8636363636363636,
+    "answer_correctness": 0.802839949354022,
+    "citation_accuracy": 0.5666666666666667
   },
-  "summary": "# RAG Evaluation Report: Vector-Only vs Graph-Backed\n\n**Timestamp:** 2026-02-15T23:13:49.111943\n**Total Questions:** 11\n\n## Aggregate Scores\n\n| Metric | Vector RAG | Graph RAG | Delta |\n|--------|-----------|-----------|-------|\n| faithfulness | 0.991 | 0.936 | -0.055 |\n| context_precision | 0.900 | 0.491 | -0.409 |\n| context_recall | 0.909 | 0.909 | 0.000 |\n| answer_correctness | 0.834 | 0.752 | -0.082 |\n| citation_accuracy | N/A | 0.405 | \u2014 |\n\n## Per-Category Breakdown\n\n### single_hop\n\n**Q:** What is the patient's blood pressure?\n- **Expected:** The patient's blood pressure is 152/88 mmHg.\u2026\n- **Vector answer:** Based on the provided context, the patient's blood pressure is 152/88 mmHg [Chunk 2].\n\nThis blood pressure reading was taken during the objective exam\u2026\n  - Faithfulness=1.00, Precision=1.00, Recall=1.00, Correctness=0.95\n- **Graph answer:** Based on the provided Knowledge Graph context, the patient's blood pressure is **152/88 mmHg**.\n\nThis information is directly documented in the vital \u2026\n  - Faithfulness=1.00, Precision=0.30, Recall=1.00, Correctness=0.91\n  - Citation Accuracy=0.41\n\n\n**Q:** What is the patient's heart rate and oxygen saturation?\n- **Expected:** Heart rate is 78 bpm and oxygen saturation (SpO2) is 97%.\u2026\n- **Vector answer:** Based on the provided context:\n\nThe patient's heart rate is 78 beats per minute and oxygen saturation (SpO2) is 97% [Chunk 1].\n\nThese vital signs were\u2026\n  - Faithfulness=1.00, Precision=1.00, Recall=1.00, Correctness=0.97\n- **Graph answer:** Based on the provided Knowledge Graph context, I can identify the patient's vital signs from the clinical documentation.\n\n## Patient's Vital Signs\n\n**\u2026\n  - Faithfulness=1.00, Precision=0.30, Recall=1.00, Correctness=0.88\n  - Citation Accuracy=0.00\n\n\n**Q:** What is the patient's age and sex?\n- **Expected:** The patient is a 62-year-old male.\u2026\n- **Vector answer:** Based on the provided context, the patient is a 62-year-old male [Chunk 4]. \n\nThe context states \"Peter Fern (62M)\" which indicates the patient is 62 \u2026\n  - Faithfulness=1.00, Precision=1.00, Recall=1.00, Correctness=0.89\n- **Graph answer:** Based on the Knowledge Graph context, the patient's age and sex are:\n\n**Age: 62 years old**\n**Sex: Male**\n\n## Source Citations and Evidence:\n\n**Age:**\u2026\n  - Faithfulness=1.00, Precision=0.70, Recall=1.00, Correctness=0.84\n  - Citation Accuracy=0.03\n\n### multi_hop\n\n**Q:** What conditions could explain the patient's exertional symptoms given their risk factors?\n- **Expected:** Stable angina is the likely diagnosis given the exertional pattern (chest tightness 2-3x/week when walking uphill or carrying groceries, resolves with\u2026\n- **Vector answer:** Based on the provided context, the following conditions could explain the patient's exertional symptoms:\n\n**Most Likely:**\n1. **Stable angina** - This\u2026\n  - Faithfulness=0.90, Precision=1.00, Recall=1.00, Correctness=0.86\n- **Graph answer:** Based on the Knowledge Graph context, several conditions could explain Peter Fern's exertional symptoms given his risk factors:\n\n## Primary Considerat\u2026\n  - Faithfulness=0.90, Precision=0.70, Recall=1.00, Correctness=0.74\n  - Citation Accuracy=0.96\n\n\n**Q:** How does the patient's medication adherence relate to their blood pressure control?\n- **Expected:** The patient admits to occasionally missing blood pressure medications. This inconsistent adherence is directly related to the borderline hypertension \u2026\n- **Vector answer:** Based on the provided context, there is a clear relationship between the patient's medication adherence and blood pressure control:\n\n**Poor Adherence \u2026\n  - Faithfulness=1.00, Precision=1.00, Recall=1.00, Correctness=0.89\n- **Graph answer:** Based on the Knowledge Graph context, there is a clear relationship between the patient's medication adherence and blood pressure control:\n\n## Direct \u2026\n  - Faithfulness=0.90, Precision=0.70, Recall=1.00, Correctness=0.83\n  - Citation Accuracy=0.65\n\n### provenance\n\n**Q:** What source section mentions the patient's medication adherence?\n- **Expected:** The Subjective section mentions that the patient admits occasionally missing BP meds.\u2026\n- **Vector answer:** Based on the provided context, the patient's medication adherence is mentioned in the **Assessment** section.\n\nSpecifically, [Chunk 1] from the Assess\u2026\n  - Faithfulness=1.00, Precision=0.60, Recall=0.00, Correctness=0.16\n- **Graph answer:** Based on the Knowledge Graph context, the patient's medication adherence is mentioned in multiple source sections:\n\n## Primary Source Sections:\n\n1. **\u2026\n  - Faithfulness=0.80, Precision=0.30, Recall=0.00, Correctness=0.13\n  - Citation Accuracy=0.23\n\n\n**Q:** Which section of the note contains the family history information?\n- **Expected:** The Assessment section mentions family history: father had a myocardial infarction at age 58.\u2026\n- **Vector answer:** Based on the provided context, the family history information is contained in the Assessment section [Chunk 2]. Specifically, this chunk mentions \"fam\u2026\n  - Faithfulness=1.00, Precision=1.00, Recall=1.00, Correctness=0.93\n- **Graph answer:** Based on the Knowledge Graph context, the family history information is contained in the **Assessment** section of the SOAP note.\n\n**Evidence from the\u2026\n  - Faithfulness=1.00, Precision=0.30, Recall=1.00, Correctness=0.91\n  - Citation Accuracy=0.33\n\n### relationship\n\n**Q:** What medications are prescribed or planned for the patient's conditions?\n- **Expected:** The patient is to continue antihypertensives for hypertension (with reinforced daily adherence) and was provided sublingual nitroglycerin for exertion\u2026\n- **Vector answer:** Based on the provided context, the following medications are prescribed or planned:\n\n**Currently Prescribed:**\n- Antihypertensive medications - The pa\u2026\n  - Faithfulness=1.00, Precision=1.00, Recall=1.00, Correctness=0.82\n- **Graph answer:** Based on the Knowledge Graph context, I can identify the following medications that are prescribed or planned for the patient's conditions:\n\n## Curren\u2026\n  - Faithfulness=0.90, Precision=1.00, Recall=1.00, Correctness=0.74\n  - Citation Accuracy=0.77\n\n\n**Q:** What procedures are pending or scheduled for the patient?\n- **Expected:** A treadmill myocardial perfusion scan was completed yesterday but the report is pending final review. A follow-up visit is scheduled in 1-2 weeks to r\u2026\n- **Vector answer:** Based on the provided context, the following procedures are pending or scheduled for the patient:\n\n**Pending:**\n- Final review of treadmill myocardial\u2026\n  - Faithfulness=1.00, Precision=0.90, Recall=1.00, Correctness=0.88\n- **Graph answer:** Based on the Knowledge Graph context, several procedures are pending or scheduled for Peter Julius Fern:\n\n## Pending Procedures:\n\n1. **Perfusion imagi\u2026\n  - Faithfulness=0.80, Precision=0.90, Recall=1.00, Correctness=0.67\n  - Citation Accuracy=0.81\n\n### cross_reference\n\n**Q:** What is the patient's health card number and postal code?\n- **Expected:** Health card number is 9696178816 and postal code is K7L 3V8.\u2026\n- **Vector answer:** Based on the provided context:\n\n**Health Card Number:** 9696178816 [Chunk 1]\n\n**Postal Code:** K7L 3V8 [Chunk 1]\n\nBoth pieces of information are found\u2026\n  - Faithfulness=1.00, Precision=0.60, Recall=1.00, Correctness=0.95\n- **Graph answer:** Based on the Knowledge Graph context, I can provide the following information for patient Peter Julius Fern:\n\n**Health Card Number:** 9696178816\n**Pos\u2026\n  - Faithfulness=1.00, Precision=0.10, Recall=1.00, Correctness=0.84\n  - Citation Accuracy=0.03\n\n\n**Q:** What is the full name and contact information of the patient?\n- **Expected:** Peter Julius Fern. Home phone: 613-6565-890, mobile: 647-666-8888, email: peter.fern@email.com, address: 45 Maple Ave, Toronto, ON K7L 3V8, Canada.\u2026\n- **Vector answer:** Based on the provided context, the patient's full name and contact information is:\n\n**Full Name:** Peter Julius Fern [Chunk 1]\n\n**Contact Information:\u2026\n  - Faithfulness=1.00, Precision=0.80, Recall=1.00, Correctness=0.89\n- **Graph answer:** Based on the Knowledge Graph context, I can provide the complete patient identification and contact information:\n\n## Patient Identity and Contact Info\u2026\n  - Faithfulness=1.00, Precision=0.10, Recall=1.00, Correctness=0.80\n  - Citation Accuracy=0.21\n\n## Key Findings\n\n\nGraph-backed RAG leverages entity relationships, k-hop neighborhood expansion, and provenance edges to provide richer, more structured context for LLM prompting. This aligns with data2.ai's eXAI philosophy of making every AI decision traceable and explainable."
+  "summary": "# RAG Evaluation Report: Vector-Only vs Graph-Backed\n\n**Timestamp:** 2026-02-16T00:07:25.411377\n**Total Questions:** 11\n\n## Aggregate Scores\n\n| Metric | Vector RAG | Graph RAG | Delta |\n|--------|-----------|-----------|-------|\n| faithfulness | 0.991 | 0.964 | -0.027 |\n| context_precision | 0.900 | 0.778 | -0.122 |\n| context_recall | 0.909 | 0.864 | -0.045 |\n| answer_correctness | 0.834 | 0.803 | -0.031 |\n| citation_accuracy | N/A | 0.567 | \u2014 |\n\n## Per-Category Breakdown\n\n### single_hop\n\n**Q:** What is the patient's blood pressure?\n- **Expected:** The patient's blood pressure is 152/88 mmHg.\u2026\n- **Vector answer:** Based on the provided context, the patient's blood pressure is 152/88 mmHg [Chunk 2].\n\nThis blood pressure reading was taken during the objective exam\u2026\n  - Faithfulness=1.00, Precision=1.00, Recall=1.00, Correctness=0.95\n- **Graph answer:** The patient's blood pressure is 152/88 mmHg.\n\n**Source:** Vital signs from [Objective] in Task_Files/soap_notes.txt: \"BP 152/88, HR 78, RR 16, SpO2 97\u2026\n  - Faithfulness=1.00, Precision=1.00, Recall=1.00, Correctness=0.96\n  - Citation Accuracy=0.00\n\n\n**Q:** What is the patient's heart rate and oxygen saturation?\n- **Expected:** Heart rate is 78 bpm and oxygen saturation (SpO2) is 97%.\u2026\n- **Vector answer:** Based on the provided context:\n\nThe patient's heart rate is 78 beats per minute and oxygen saturation (SpO2) is 97% [Chunk 1].\n\nThese vital signs were\u2026\n  - Faithfulness=1.00, Precision=1.00, Recall=1.00, Correctness=0.97\n- **Graph answer:** Based on the provided context:\n\n**Heart Rate:** 78 beats per minute\n**Oxygen Saturation (SpO2):** 97%\n\n*Source: [Objective] section in Task_Files/soap\u2026\n  - Faithfulness=1.00, Precision=1.00, Recall=1.00, Correctness=0.95\n  - Citation Accuracy=0.00\n\n\n**Q:** What is the patient's age and sex?\n- **Expected:** The patient is a 62-year-old male.\u2026\n- **Vector answer:** Based on the provided context, the patient is a 62-year-old male [Chunk 4]. \n\nThe context states \"Peter Fern (62M)\" which indicates the patient is 62 \u2026\n  - Faithfulness=1.00, Precision=1.00, Recall=1.00, Correctness=0.89\n- **Graph answer:** Based on the provided context:\n\n**Age:** 62 years old\n- Born April 15, 1960 (Demographics section, Task_Files/demographics.json)\n- Current age confirm\u2026\n  - Faithfulness=0.70, Precision=0.80, Recall=0.50, Correctness=0.78\n  - Citation Accuracy=1.00\n\n### multi_hop\n\n**Q:** What conditions could explain the patient's exertional symptoms given their risk factors?\n- **Expected:** Stable angina is the likely diagnosis given the exertional pattern (chest tightness 2-3x/week when walking uphill or carrying groceries, resolves with\u2026\n- **Vector answer:** Based on the provided context, the following conditions could explain the patient's exertional symptoms:\n\n**Most Likely:**\n1. **Stable angina** - This\u2026\n  - Faithfulness=0.90, Precision=1.00, Recall=1.00, Correctness=0.86\n- **Graph answer:** Based on the provided context, the primary condition that could explain the patient's exertional symptoms is **stable angina**.\n\n**Primary Diagnosis:*\u2026\n  - Faithfulness=1.00, Precision=1.00, Recall=1.00, Correctness=0.81\n  - Citation Accuracy=1.00\n\n\n**Q:** How does the patient's medication adherence relate to their blood pressure control?\n- **Expected:** The patient admits to occasionally missing blood pressure medications. This inconsistent adherence is directly related to the borderline hypertension \u2026\n- **Vector answer:** Based on the provided context, there is a clear relationship between the patient's medication adherence and blood pressure control:\n\n**Poor Adherence \u2026\n  - Faithfulness=1.00, Precision=1.00, Recall=1.00, Correctness=0.89\n- **Graph answer:** Based on the provided context, there is a direct relationship between the patient's poor medication adherence and suboptimal blood pressure control.\n\n\u2026\n  - Faithfulness=1.00, Precision=1.00, Recall=1.00, Correctness=0.92\n  - Citation Accuracy=1.00\n\n### provenance\n\n**Q:** What source section mentions the patient's medication adherence?\n- **Expected:** The Subjective section mentions that the patient admits occasionally missing BP meds.\u2026\n- **Vector answer:** Based on the provided context, the patient's medication adherence is mentioned in the **Assessment** section.\n\nSpecifically, [Chunk 1] from the Assess\u2026\n  - Faithfulness=1.00, Precision=0.60, Recall=0.00, Correctness=0.16\n- **Graph answer:** The patient's medication adherence is mentioned in the **Assessment** section, which states \"Hypertension \u2014 borderline control; adherence inconsistent\u2026\n  - Faithfulness=1.00, Precision=0.30, Recall=0.00, Correctness=0.30\n  - Citation Accuracy=0.00\n\n\n**Q:** Which section of the note contains the family history information?\n- **Expected:** The Assessment section mentions family history: father had a myocardial infarction at age 58.\u2026\n- **Vector answer:** Based on the provided context, the family history information is contained in the Assessment section [Chunk 2]. Specifically, this chunk mentions \"fam\u2026\n  - Faithfulness=1.00, Precision=1.00, Recall=1.00, Correctness=0.93\n- **Graph answer:** The family history information is contained in **Chunk 2**, which states \"Multiple risk factors: HTN, age, family hx (father MI at 58).\"\n\nThis section\u2026\n  - Faithfulness=1.00, Precision=1.00, Recall=1.00, Correctness=0.77\n\n### relationship\n\n**Q:** What medications are prescribed or planned for the patient's conditions?\n- **Expected:** The patient is to continue antihypertensives for hypertension (with reinforced daily adherence) and was provided sublingual nitroglycerin for exertion\u2026\n- **Vector answer:** Based on the provided context, the following medications are prescribed or planned:\n\n**Currently Prescribed:**\n- Antihypertensive medications - The pa\u2026\n  - Faithfulness=1.00, Precision=1.00, Recall=1.00, Correctness=0.82\n- **Graph answer:** Based on the provided context, the following medications are prescribed or planned for the patient:\n\n## Current Medications:\n\n1. **Antihypertensives**\u2026\n  - Faithfulness=1.00, Precision=1.00, Recall=1.00, Correctness=0.84\n  - Citation Accuracy=1.00\n\n\n**Q:** What procedures are pending or scheduled for the patient?\n- **Expected:** A treadmill myocardial perfusion scan was completed yesterday but the report is pending final review. A follow-up visit is scheduled in 1-2 weeks to r\u2026\n- **Vector answer:** Based on the provided context, the following procedures are pending or scheduled for the patient:\n\n**Pending:**\n- Final review of treadmill myocardial\u2026\n  - Faithfulness=1.00, Precision=0.90, Recall=1.00, Correctness=0.88\n- **Graph answer:** Based on the provided context, the following procedures are pending or scheduled for the patient:\n\n**Pending:**\n- **Perfusion imaging** - Status: Pend\u2026\n  - Faithfulness=0.90, Precision=0.80, Recall=1.00, Correctness=0.69\n  - Citation Accuracy=1.00\n\n### cross_reference\n\n**Q:** What is the patient's health card number and postal code?\n- **Expected:** Health card number is 9696178816 and postal code is K7L 3V8.\u2026\n- **Vector answer:** Based on the provided context:\n\n**Health Card Number:** 9696178816 [Chunk 1]\n\n**Postal Code:** K7L 3V8 [Chunk 1]\n\nBoth pieces of information are found\u2026\n  - Faithfulness=1.00, Precision=0.60, Recall=1.00, Correctness=0.95\n- **Graph answer:** Based on the provided context:\n\n**Health Card Number:** 9696178816\n**Postal Code:** K7L 3V8\n\n**Source:** Demographics section in Task_Files/demographi\u2026\n  - Faithfulness=1.00, Precision=0.33, Recall=1.00, Correctness=0.96\n  - Citation Accuracy=0.33\n\n\n**Q:** What is the full name and contact information of the patient?\n- **Expected:** Peter Julius Fern. Home phone: 613-6565-890, mobile: 647-666-8888, email: peter.fern@email.com, address: 45 Maple Ave, Toronto, ON K7L 3V8, Canada.\u2026\n- **Vector answer:** Based on the provided context, the patient's full name and contact information is:\n\n**Full Name:** Peter Julius Fern [Chunk 1]\n\n**Contact Information:\u2026\n  - Faithfulness=1.00, Precision=0.80, Recall=1.00, Correctness=0.89\n- **Graph answer:** Based on the provided context:\n\n**Full Name:** Peter Julius Fern\n\n**Contact Information:**\n- Home Phone: 613-6565-890\n- Mobile Phone: 647-666-8888\n- E\u2026\n  - Faithfulness=1.00, Precision=0.33, Recall=1.00, Correctness=0.84\n  - Citation Accuracy=0.33\n\n## Key Findings\n\n\nGraph-backed RAG leverages entity relationships, k-hop neighborhood expansion, and provenance edges to provide richer, more structured context for LLM prompting. This aligns with data2.ai's eXAI philosophy of making every AI decision traceable and explainable."
 }

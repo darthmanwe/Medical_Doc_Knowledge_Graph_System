@@ -5,11 +5,12 @@ Mirrors data2.ai's approach: "every answer reveals the logic behind it."
 
 Pipeline:
   1. Entity-first retrieval via Neo4j vector index → seed entities
-  2. K-hop neighborhood expansion → subgraph context
+  2. K-hop neighborhood expansion → subgraph context (adaptive depth)
   3. Relationship-constrained filtering → clinically relevant paths
   4. Path-based reasoning → explicit reasoning chains
   5. Provenance linking → citations back to source chunks
-  6. Structured context bundle → LLM prompt with citation markers
+  6. Re-rank all context elements by query relevance → pruned bundle
+  7. Structured context bundle → LLM prompt with citation markers
 """
 
 from __future__ import annotations
@@ -19,22 +20,24 @@ import time
 
 from app.models.schema import QueryResponse
 from app.rag.llm_client import generate
-from app.retrieval.context_builder import build_context, format_context_for_prompt
+from app.retrieval.context_builder import (
+    build_context,
+    format_context_for_prompt,
+    rerank_context_bundle,
+)
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = """You are a medical knowledge assistant powered by a Knowledge Graph.
-You have access to structured medical data including entities, relationships, reasoning paths, and provenance citations.
-
-RULES:
-1. Only state facts that are directly supported by the provided context.
-2. Use the Knowledge Graph structure to reason about relationships between medical concepts.
-3. Cite your sources using the provenance citations provided — reference the specific section and source file.
-4. When reasoning across multiple entities, explain the path: Entity A -[RELATIONSHIP]-> Entity B.
-5. If the context doesn't contain enough information, say so explicitly.
-6. Expand all medical abbreviations in your answer.
-7. Distinguish between facts extracted from the document vs inferences from graph relationships.
-"""
+SYSTEM_PROMPT = (
+    "You are a medical knowledge assistant backed by a Knowledge Graph.\n"
+    "Answer ONLY from the provided context. Be concise and factual.\n"
+    "Rules:\n"
+    "1. State only facts supported by the context.\n"
+    "2. Cite sources: reference the section and source file from Provenance.\n"
+    "3. When reasoning across entities, show the path: A -[REL]-> B.\n"
+    "4. If the context is insufficient, say so.\n"
+    "5. Expand medical abbreviations on first use."
+)
 
 
 def graph_rag_query(
@@ -47,28 +50,27 @@ def graph_rag_query(
     # Step 1-5: Build context bundle using all retrieval patterns
     t_retrieval = time.time()
     context_bundle = build_context(query=question, top_k=top_k, max_hops=max_hops)
+
+    # Step 6: Re-rank context elements by query relevance
+    context_bundle = rerank_context_bundle(question, context_bundle)
     retrieval_ms = (time.time() - t_retrieval) * 1000
 
-    # Step 6: Format context for LLM prompt
+    # Step 7: Format context for LLM prompt
     formatted_context = format_context_for_prompt(context_bundle)
 
-    # Step 7: Generate answer
+    # Step 8: Generate answer
     t_gen = time.time()
 
     user_message = (
-        f"## Knowledge Graph Context\n\n"
-        f"{formatted_context}\n\n"
-        f"---\n\n"
-        f"## Question\n{question}\n\n"
-        f"Answer based on the Knowledge Graph context above. "
-        f"Cite specific source sections and entity relationships. "
-        f"Explain your reasoning path through the graph when applicable."
+        f"{formatted_context}\n\n---\n\n"
+        f"Question: {question}\n\n"
+        f"Answer concisely using the context above. Cite sources."
     )
 
     answer = generate(
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": user_message}],
-        max_tokens=1500,
+        max_tokens=1024,
     )
     generation_ms = (time.time() - t_gen) * 1000
 

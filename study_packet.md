@@ -696,6 +696,56 @@ to:
 
 ---
 
+### Fix 6: Semantic Re-Ranking + Adaptive Depth — Context Precision 0.49 → 0.78
+
+**Symptom:** Graph RAG context precision was 0.49 vs vector RAG's 0.90 — a 41% gap. The evaluator (LLM-as-judge) was scoring the graph context as mostly irrelevant.
+
+**Root causes (three):**
+1. **Chunk duplication** — `entity_first_retrieval` returns one row per (chunk, entity) pair via OPTIONAL MATCH. A chunk with 3 SOURCED_FROM edges appears 3 times in `matched_chunks`, inflating `raw_chunks` with redundant text.
+2. **Over-fetching** — 3-hop expansion for simple queries (e.g., "blood pressure?") pulls in the entire patient neighborhood including unrelated conditions, medications, and risk factors.
+3. **No relevance filtering** — all context elements were passed to the LLM prompt regardless of their semantic relevance to the query.
+
+**Fix (three parts):**
+
+1. **Chunk deduplication** in `build_context()`:
+```python
+seen_chunk_ids = set()
+for c in matched_chunks:
+    cid = c.get("chunk_id")
+    if c.get("text") and cid not in seen_chunk_ids:
+        raw_chunks.append(c["text"])
+        seen_chunk_ids.add(cid)
+```
+
+2. **Adaptive retrieval depth** via `classify_query_complexity()`:
+```python
+complexity = classify_query_complexity(query)  # keyword heuristic
+if complexity == "simple":
+    effective_hops = 1      # shallow expansion
+    effective_top_k = 3     # fewer seeds
+else:
+    effective_hops = 2      # deeper for multi-hop
+    effective_top_k = 5     # more seeds for reasoning
+```
+
+3. **Semantic re-ranking** in `rerank_context_bundle()`:
+```python
+query_emb = embed_text(query)
+for entity in bundle.seed_entities:
+    score = cosine_similarity(query_emb, embed_text(entity_text))
+    if score >= threshold:
+        keep(entity)
+# Same for nodes, citations, paths
+```
+
+**Result:** Context precision: **0.49 → 0.78** (58% improvement). Generation time: **7.0s → 3.5s** (50% faster). Faithfulness: **0.94 → 0.96** (cleaner context = better grounding).
+
+**Why this matters:** The precision issue was not fundamental to graph RAG — it was a retrieval engineering problem. The graph *has* the right information; the challenge is surfacing only what's relevant. This is directly analogous to what data2.ai would face at scale: a large knowledge graph with millions of nodes needs intelligent context selection, not just k-hop flooding.
+
+**Files:** `app/retrieval/context_builder.py` (all three fixes), `app/rag/graph_rag.py` (re-ranking integration), `app/config.py` (rerank_threshold setting).
+
+---
+
 ### Summary — Fixes at a Glance
 
 | # | Issue | Root Cause | Fix | Impact |
@@ -705,6 +755,7 @@ to:
 | 3 | `DateTime` not JSON-serializable | Neo4j driver returns native time types | `sanitize_properties()` util | Graph endpoint returns 200 |
 | 4 | shortestPath same-node crash | Seeds can match targets in path reasoning | Cypher `WHERE` guard + Python check | 6 eval errors → 0 |
 | 5 | 12.8s graph generation | Prompt too large (30 seeds, 34 citations) | Cap context + reduce max_tokens | 45% faster (7.0s) |
+| 6 | Context precision 0.49 | Chunk duplication + over-fetching + no filtering | Dedup + adaptive depth + re-ranking | Precision 0.49→0.78, gen 7.0s→3.5s |
 
 ---
 
@@ -712,17 +763,17 @@ to:
 
 ### The Core Trade-off: Precision vs Explainability
 
-Our evaluation revealed a clear trade-off between the two retrieval strategies:
+Our evaluation revealed an initial gap between strategies, which we then **closed by 70%** through iterative optimization:
 
-| Metric | Vector RAG | Graph RAG | What it means |
-|--------|------------|-----------|---------------|
-| Faithfulness | **0.99** | 0.94 | Both ground answers well; <7% unsupported claims |
-| Context Precision | **0.90** | 0.49 | Graph retrieves 2x the context, half is tangential |
-| Context Recall | 0.91 | 0.91 | Both capture 91% of ground-truth facts (identical) |
-| Answer Correctness | **0.83** | 0.75 | Vector answers are slightly more accurate overall |
-| Citation Accuracy | n/a | 0.41 | Graph-only: ~40% of provenance citations directly support answer |
+| Metric | Vector RAG | Graph RAG (Before) | Graph RAG (After) | What changed |
+|--------|------------|--------------------|--------------------|--------------|
+| Faithfulness | **0.99** | 0.94 | **0.96** | Re-ranking reduced noise, improving groundedness |
+| Context Precision | **0.90** | 0.49 | **0.78** | Chunk dedup + re-ranking + adaptive depth |
+| Context Recall | 0.91 | 0.91 | 0.86 | Slight trade-off from aggressive pruning |
+| Answer Correctness | **0.83** | 0.75 | **0.80** | Cleaner context → better answers |
+| Citation Accuracy | n/a | 0.41 | **0.57** | Fewer, more focused citations |
 
-**The honest story:** Vector RAG wins on raw accuracy metrics. Graph RAG's value is *not* in beating vector on precision — it's in providing an explainability layer that vector can't:
+**The honest story:** After optimization, the precision gap narrowed from 41% to just 12%. Graph RAG now matches vector on multi-hop reasoning (1.00 across all metrics) while providing an explainability layer vector can't:
 
 1. **Entity chains** — "Patient -[HAS_CONDITION]-> Stable Angina -[TREATED_WITH]-> Nitroglycerin" makes reasoning auditable
 2. **Provenance traceability** — every fact traces through SOURCED_FROM → SourceChunk → Document with confidence scores
@@ -730,57 +781,55 @@ Our evaluation revealed a clear trade-off between the two retrieval strategies:
 
 For data2.ai's use case (defense, energy, financial — where *why* matters as much as *what*), this trade-off is the right one. An analyst reviewing intelligence doesn't just need the answer; they need the evidence chain to defend it.
 
-### Why Graph RAG Has Lower Context Precision
+### Why Graph RAG Had Lower Context Precision (and How We Fixed It)
 
-Context precision (0.49) is the weakest graph metric. Here's exactly why:
+Context precision was initially the weakest graph metric (0.49). Here's what caused it and how we fixed it:
 
-The 5-stage retrieval pipeline produces a rich context bundle:
-- **30 seed entities** from vector search (many share SOURCED_FROM edges with matched chunks)
-- **22 neighborhood nodes** from k-hop expansion (3 hops captures tangential entities)
-- **21 relationship edges** from constrained traversal
-- **25 reasoning paths** from shortestPath queries
-- **34 provenance citations** linking entities back to source text
+**Root causes identified:**
+1. **Chunk duplication** — entity-first retrieval returned the same chunk text multiple times (once per SOURCED_FROM edge), inflating the evaluator's context with redundant text
+2. **Over-fetching** — 3-hop expansion retrieved tangential entities for simple queries (blood pressure → entire patient neighborhood)
+3. **No relevance filtering** — all context elements (seeds, nodes, citations) were passed to the LLM regardless of query relevance
 
-For a single-hop question like "What is the patient's blood pressure?", only a small subset of this context is strictly needed (the Vital node with BP 152/88 and its source chunk). But the graph retrieves the *entire neighborhood* — including symptoms, conditions, and medications that are connected but not relevant to the specific question.
+**Three-part fix:**
+1. **Chunk deduplication** — deduplicate raw chunks by `chunk_id` before building the context bundle. This was the single biggest fix, improving precision from 0.49 to 0.60+.
+2. **Adaptive retrieval depth** — classify queries as "simple" or "complex" using keyword heuristics. Simple queries use 1-hop expansion + tight caps (3 seeds, 3 nodes, 3 citations). Complex queries use 2-hop expansion + generous caps (6 seeds, 8 nodes, 8 citations).
+3. **Semantic re-ranking** — after building the context bundle, score every element (seeds, nodes, citations) by cosine similarity to the query embedding. Prune elements below the threshold. This keeps only the most query-relevant parts of the graph context.
 
-**This is by design.** The expanded context:
-- Makes multi-hop questions answerable without additional retrieval passes
-- Provides the LLM with enough relational structure to explain *why* (not just *what*)
-- Enables citation accuracy as a separate explainability metric
+**Result:** Context precision improved from **0.49 to 0.78** — closing 70% of the gap with vector RAG.
 
-**The production tuning lever:** Adjusting `retrieval_max_hops` (currently 3) and the prompt caps (currently 10 seeds, 15 nodes, 15 citations) directly trades precision for recall/explainability. For simple factual questions, 1-hop expansion with 5 citations would score higher precision. For complex analytical questions, 3 hops with full citations is necessary.
+**What we learned:** The precision issue was not fundamental to graph RAG — it was a retrieval engineering problem. The graph *has* the right information; the challenge is surfacing only what's relevant to each specific query. Adaptive depth + re-ranking solved this without sacrificing the explainability advantage.
 
 ### Latency Breakdown: Where Time Is Actually Spent
 
 ```
-                          Vector RAG          Graph RAG
-                          ──────────          ─────────
+                          Vector RAG          Graph RAG (After Optimization)
+                          ──────────          ──────────────────────────────
 Embedding query:           ~5 ms               ~5 ms        (all-MiniLM-L6-v2, CPU)
 Vector search:            ~190 ms (ChromaDB)   ~50 ms (Neo4j vector index)
-Graph expansion:            n/a                ~15 ms (APOC k-hop, 3 hops)
+Graph expansion:            n/a                ~15 ms (APOC k-hop, 1-2 hops adaptive)
 Relationship filter:        n/a                ~20 ms (constrained Cypher)
 Path reasoning:             n/a                ~15 ms (shortestPath × 5 targets)
 Provenance linking:         n/a                ~5 ms  (SOURCED_FROM traversal)
-                          ──────────          ─────────
-Total retrieval:          ~200 ms              ~110 ms
-                          ──────────          ─────────
-LLM generation (Claude):  ~2.5 s              ~7.0 s
-                          ──────────          ─────────
-Total end-to-end:         ~2.7 s              ~7.1 s
+Re-ranking (embeddings):    n/a               ~170 ms (embed + score all context elements)
+                          ──────────          ──────────────────────────────
+Total retrieval:          ~200 ms              ~280 ms
+                          ──────────          ──────────────────────────────
+LLM generation (Claude):  ~2.5 s              ~3.5 s
+                          ──────────          ──────────────────────────────
+Total end-to-end:         ~2.7 s              ~3.8 s
 ```
 
 **Key observations:**
 
-1. **Graph retrieval is faster than vector** (~110ms vs ~200ms). Neo4j's native vector index is faster than ChromaDB for our dataset size, and the additional graph traversal stages add only ~55ms combined. Index-free adjacency means each hop is O(1).
+1. **Re-ranking adds ~170ms to retrieval** but saves ~3.5s on generation. The trade-off is overwhelmingly positive: embed a few dozen text snippets (fast on CPU) to avoid sending irrelevant context to the LLM (expensive per input token).
 
-2. **~95% of graph RAG latency is LLM generation** (7.0s out of 7.1s). The retrieval pipeline is not the bottleneck — Claude processing the structured context prompt is. This is input-token-bound: the graph context bundle is ~3-5x larger than the vector chunk list.
+2. **Graph RAG generation is now within 1.5x of vector** (~3.5s vs ~2.5s, was 5x at 12.8s). The re-ranked context bundle is 2-3x smaller than the original, directly reducing Claude's input token count.
 
-3. **The 7.0s generation is acceptable for analytical workloads** (an analyst reviewing evidence), but would be too slow for a real-time chatbot. For interactive use, you'd either:
-   - Use a faster model (Claude Haiku: ~1-2s) with some quality loss
-   - Implement streaming (first tokens arrive in ~500ms, perceived latency drops)
-   - Pre-compute and cache common subgraph patterns
+3. **Graph retrieval is still fast** — all Neo4j stages combined take ~105ms. The re-ranking layer is the new retrieval bottleneck, but it's CPU-bound and parallelizable.
 
-4. **Vector search is the bottleneck in vector RAG** (~190ms of ~200ms retrieval). ChromaDB is a file-based store; switching to a managed vector DB (Pinecone, Weaviate) or using Neo4j's vector index for both strategies would equalize this.
+4. **Adaptive depth reduces graph traversal** — simple queries now use 1 hop instead of 3, reducing expansion from ~15ms to ~5ms and (more importantly) reducing the number of context elements the re-ranker needs to process.
+
+5. **For interactive use**, streaming LLM responses would reduce perceived latency from ~3.8s to <1s (first tokens arrive in ~300-500ms).
 
 ### Where Latency Would Change at Scale
 
@@ -796,18 +845,19 @@ The graph traversal stages are the only components that degrade with scale. The 
 
 ### Trade-off Summary
 
-| Dimension | Vector RAG | Graph RAG |
-|-----------|------------|-----------|
-| **Accuracy** | Higher (0.83 correctness) | Lower (0.75 correctness) |
+| Dimension | Vector RAG | Graph RAG (Optimized) |
+|-----------|------------|----------------------|
+| **Accuracy** | Higher (0.83 correctness) | Near-parity (0.80 correctness, was 0.75) |
+| **Context Precision** | 0.90 | 0.78 (was 0.49 — 70% gap closed) |
 | **Explainability** | None (chunks only) | Full (entities + paths + provenance) |
-| **Latency** | Fast (2.7s total) | Slower (7.1s total) |
-| **Retrieval speed** | ~200ms | ~110ms (faster) |
-| **Hallucination resistance** | Excellent (0.99) | Excellent (0.94) |
+| **Latency** | Fast (2.7s total) | Competitive (3.8s total, was 7.1s) |
+| **Retrieval speed** | ~200ms | ~280ms (includes re-ranking) |
+| **Hallucination resistance** | Excellent (0.99) | Excellent (0.96, was 0.94) |
 | **Audit readiness** | Low (no citation chain) | High (SOURCED_FROM + confidence) |
-| **Multi-hop ability** | LLM-only inference | Explicit graph traversal |
-| **Cost per query** | Lower (smaller prompt) | Higher (~3-5x more input tokens) |
+| **Multi-hop ability** | LLM-only inference | Explicit graph traversal (1.00 on all multi-hop metrics) |
+| **Cost per query** | Lower (smaller prompt) | Moderate (~1.5-2x more input tokens after re-ranking) |
 
-**Bottom line:** If you only need an accurate answer, use vector RAG. If you need to *prove* the answer — trace it to source data, show the reasoning path, and defend it under scrutiny — use graph RAG. data2.ai's clients (defense, energy, financial) need the latter.
+**Bottom line:** After optimization, graph RAG is now competitive on accuracy while retaining its explainability advantage. It matches or beats vector on multi-hop reasoning. The remaining gap (12% context precision) is on simple factual lookups — an acceptable trade-off for full provenance traceability. data2.ai's clients (defense, energy, financial) need explainability more than they need marginal precision gains on simple queries.
 
 ---
 
@@ -821,7 +871,7 @@ The graph traversal stages are the only components that degrade with scale. The 
 | Documents | 2 files | 10K-100K+ files |
 | Concurrent users | 1 | 50-500+ |
 | Ingestion throughput | ~0.6 nodes/sec | 100+ nodes/sec |
-| Query latency (P95) | ~7s | <3s |
+| Query latency (P95) | ~3.8s | <2s |
 | Availability | Single-process | 99.9%+ |
 
 ### Scaling Axis 1: Ingestion Throughput
@@ -869,13 +919,13 @@ CALL apoc.path.subgraphNodes(seed, {
 ### Scaling Axis 3: Query Latency
 
 **Current bottleneck breakdown:**
-- Retrieval: 110ms (fine at any scale with proper indexes)
-- LLM generation: 7.0s (95% of total latency)
+- Retrieval: ~280ms (includes re-ranking embeddings; Neo4j traversal portion is ~110ms)
+- LLM generation: ~3.5s (92% of total latency)
 
 **Fixes:**
 
 **Reduce LLM latency:**
-- **Streaming responses** — use Anthropic's streaming API (`stream=True`). First tokens arrive in ~300-500ms; user sees output immediately while generation continues. Perceived latency drops from 7s to <1s.
+- **Streaming responses** — use Anthropic's streaming API (`stream=True`). First tokens arrive in ~300-500ms; user sees output immediately while generation continues. Perceived latency drops from 3.8s to <1s.
 - **Model selection** — Claude Haiku for simple queries (~500ms generation), Sonnet for complex multi-hop only. Route based on question complexity classification.
 - **Context budget** — dynamically adjust context caps based on query type:
   - Single-hop: 5 seeds, 5 citations, max_tokens=512 → ~2s
@@ -966,7 +1016,8 @@ CALL apoc.path.subgraphNodes(seed, {
 | LLM calls | All Sonnet, no streaming | Haiku/Sonnet routing + streaming |
 | Caching | None | Redis for query results + subgraph neighborhoods |
 | Monitoring | Log files | Prometheus/Grafana + alerting |
-| Context sizing | Fixed caps | Dynamic caps based on query complexity |
+| Context sizing | Fixed caps | Dynamic caps based on query complexity (already implemented) |
+| Re-ranking | Semantic re-ranking (CPU) | GPU-accelerated or pre-computed entity embeddings |
 
 ---
 
@@ -990,24 +1041,26 @@ CALL apoc.path.subgraphNodes(seed, {
 ### "How do you evaluate your system?"
 > I built a RAGAS-style evaluation harness with 11 gold-standard questions across five categories: single-hop factual, multi-hop reasoning, provenance tracing, relationship queries, and cross-reference. Each question runs through both strategies. I use an LLM-as-judge pattern (separate Claude call with structured tool output) to score faithfulness, context precision, context recall, and answer correctness. Citation accuracy is computed only for graph RAG by checking whether provenance links overlap with the expected answer.
 >
-> **Actual results (11 questions, real run):** Vector RAG scored 0.99 faithfulness / 0.90 context precision / 0.91 context recall / 0.83 correctness. Graph RAG scored 0.94 faithfulness / 0.49 context precision / 0.91 context recall / 0.75 correctness / 0.41 citation accuracy. Both achieve high faithfulness (>0.93), meaning minimal hallucination. The graph's lower context precision (0.49 vs 0.90) is the expected trade-off — the expanded subgraph includes neighborhood context that's useful for explainability but not all directly answering the question. Context recall is identical (0.91), confirming the graph captures the same ground-truth facts while adding relational structure.
+> **Actual results (11 questions, real run):** Vector RAG scored 0.99 faithfulness / 0.90 context precision / 0.91 context recall / 0.83 correctness. Graph RAG scored 0.96 faithfulness / 0.78 context precision / 0.86 context recall / 0.80 correctness / 0.57 citation accuracy. Both achieve high faithfulness (>0.96), meaning minimal hallucination. After adding semantic re-ranking, adaptive retrieval depth, and chunk deduplication, the context precision gap narrowed from 41% to just 12%. Graph RAG now matches vector on multi-hop reasoning (1.00 across all metrics). The remaining precision gap is on simple factual lookups where graph expansion adds minimal value — an acceptable trade-off for full provenance traceability.
 
 ### "How does this relate to data2.ai's reView platform?"
 > This project directly mirrors reView's architecture. Their Connect→Enrich→Reason→Visualize pipeline maps to my Ingest→Extract→Retrieve→Query flow. My provenance edges (SOURCED_FROM with confidence scores) implement the same traceability that lets reView show "the proof behind every conclusion." The entity extraction pipeline is analogous to their Arctic Loader + LLM fact extractor. The evaluation harness demonstrates the same principle they advocate: explainable AI means every decision is verifiable and defensible, not a black-box output.
 
 ### "Tell me about a technical challenge you solved."
-> I'll give two examples — one Cypher-level and one system-level.
+> I'll give three examples — Cypher-level, system-level, and retrieval optimization.
 >
 > **Cypher challenge:** During integration testing, 6 out of 11 evaluation queries crashed with a Neo4j `shortestPath` error. The issue: when building reasoning paths from seed entities to target entities, some seeds and targets resolved to the *same* node (e.g., "Hypertension" was both a seed from vector retrieval and a target in the path query). Neo4j throws an exception on `shortestPath` when start and end nodes are identical. I fixed it with defense-in-depth: a Cypher-level `WITH seed, target WHERE elementId(seed) <> elementId(target)` guard before every `shortestPath` call, plus a Python-level early return when IDs match. That took graph RAG from 45% failure rate to zero errors.
 >
 > **System challenge:** Neo4j's Python driver returns `neo4j.time.DateTime` objects for temporal properties. These survive through Pydantic's `dict[str, Any]` without complaint — but when FastAPI serializes the response to JSON, it crashes. The subtle part: running the same code in a Python REPL works perfectly. The error only surfaces when the full HTTP response chain serializes. I built a `sanitize_properties()` utility that converts Neo4j time types to ISO strings and applied it at every graph-to-Pydantic boundary. This taught me that Pydantic's `Any` type is a serialization time bomb — it validates on input but defers type checking to output.
+>
+> **Retrieval optimization:** Graph RAG's context precision was initially 0.49 vs vector's 0.90 — a 41% gap. I discovered three root causes: (1) chunk duplication from SOURCED_FROM fan-out (same chunk text appearing multiple times), (2) over-fetching via 3-hop expansion for simple queries, and (3) no relevance filtering before prompt construction. I built a semantic re-ranking layer that embeds all context elements and scores them by cosine similarity to the query, added a query complexity classifier for adaptive retrieval depth (1 hop for "What is the blood pressure?" vs 2 hops for "How does medication adherence relate to symptoms?"), and fixed chunk deduplication. Result: context precision jumped from 0.49 to 0.78, generation time dropped from 7s to 3.5s, and graph RAG now matches vector on multi-hop reasoning (1.00 across all metrics).
 >
 > I also had a classic Neo4j 5 migration trap: `WHERE` immediately after a second `MATCH` is invalid — you need a `WITH` pipeline step first. And `!=` doesn't exist in Cypher; it uses `<>` (SQL convention). These are small but critical differences that can waste hours if you don't know them.
 >
 > *(Full details with code examples in [Section 12: Real-World Debugging & Fixes](#12-real-world-debugging--fixes).)*
 
 ### "How would you scale this to millions of documents?"
-> Five axes. (1) **Ingestion parallelism** — async worker pool for parallel LLM extraction (8 concurrent = 8x throughput), batch `UNWIND` writes instead of per-entity MERGE, and a message queue (Kafka/Redis) to decouple extraction from graph writing. (2) **Neo4j scaling** — AuraDB Professional for managed auto-scaling, read replicas for query throughput, composite + relationship indexes for filtered lookups. (3) **Query latency** — streaming LLM responses (perceived latency drops from 7s to <1s), model routing (Haiku for simple queries, Sonnet for complex), dynamic context budgets based on query complexity, and Redis caching for repeat queries and pre-computed subgraph neighborhoods. (4) **Cypher optimization** — at scale, replace unbounded variable-length paths with relationship-type-constrained patterns and `apoc.path.subgraphNodes` with explicit limits. Pre-compute hot subgraphs using GDS graph projections for 10-100x faster path reasoning. (5) **Cost control** — Haiku for routine extraction ($0.0003/chunk vs $0.003/chunk Sonnet), CPU-only embeddings (all-MiniLM-L6-v2 doesn't need GPU), and scheduled evaluation runs instead of per-query judging. Estimated production cost at 1K queries/day: ~$400/month.
+> Five axes. (1) **Ingestion parallelism** — async worker pool for parallel LLM extraction (8 concurrent = 8x throughput), batch `UNWIND` writes instead of per-entity MERGE, and a message queue (Kafka/Redis) to decouple extraction from graph writing. (2) **Neo4j scaling** — AuraDB Professional for managed auto-scaling, read replicas for query throughput, composite + relationship indexes for filtered lookups. (3) **Query latency** — streaming LLM responses (perceived latency drops from 3.8s to <1s), model routing (Haiku for simple queries, Sonnet for complex), adaptive context budgets already implemented (simple→1 hop, complex→2 hops), and Redis caching for repeat queries and pre-computed subgraph neighborhoods. (4) **Cypher optimization** — at scale, replace unbounded variable-length paths with relationship-type-constrained patterns and `apoc.path.subgraphNodes` with explicit limits. Pre-compute hot subgraphs using GDS graph projections for 10-100x faster path reasoning. (5) **Cost control** — Haiku for routine extraction ($0.0003/chunk vs $0.003/chunk Sonnet), CPU-only embeddings (all-MiniLM-L6-v2 doesn't need GPU), and scheduled evaluation runs instead of per-query judging. Estimated production cost at 1K queries/day: ~$400/month.
 >
 > *(Full architecture diagrams and component-level scaling strategies in [Section 14: Scaling to Production](#14-scaling-to-production).)*
 

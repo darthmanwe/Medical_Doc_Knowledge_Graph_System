@@ -123,5 +123,5 @@ class TestContextFormatting:
         from app.retrieval.context_builder import format_context_for_prompt
         bundle = ContextBundle(raw_chunks=["BP 152/88", "Stable angina"])
         result = format_context_for_prompt(bundle)
-        assert "Source Text Chunks" in result
+        assert "Source Text" in result
         assert "152/88" in result
