@@ -4,6 +4,8 @@
 
 A complete Knowledge Graph-backed RAG system that ingests medical documents into a Neo4j property graph with full provenance traceability, implements five expert Cypher retrieval patterns, and evaluates graph-backed RAG against vector-only RAG on factual grounding and explainability.
 
+Aim is to create a proveable comparison for Graph-back RAG versus Vector-only RAG in a traceable manner.
+
 **Built with:** Python · Neo4j 5.x · FastAPI · Anthropic Claude · sentence-transformers · ChromaDB
 
 ---
