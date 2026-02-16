@@ -2,11 +2,9 @@
 
 ### Medical Document Understanding via Property Graph Retrieval, Provenance-Linked Citations, and Explainable AI
 
-A complete Knowledge Graph-backed RAG system that ingests medical documents into a Neo4j property graph with full provenance traceability, implements five expert Cypher retrieval patterns, and evaluates graph-backed RAG against vector-only RAG on factual grounding and explainability.
+This system ingests medical documents into a Neo4j property graph with full provenance traceability, implements five composable Cypher retrieval patterns, and evaluates graph-backed RAG against vector-only RAG on factual grounding and explainability. The goal is to produce a provable, side-by-side comparison of graph-backed retrieval versus vector-only retrieval in a fully traceable manner.
 
-Aim is to create a proveable comparison for Graph-back RAG versus Vector-only RAG in a traceable manner.
-
-**Built with:** Python · Neo4j 5.x · FastAPI · Anthropic Claude · sentence-transformers · ChromaDB
+**Built with:** Python, Neo4j 5.x, FastAPI, Anthropic Claude, sentence-transformers, ChromaDB
 
 ---
 
@@ -14,53 +12,53 @@ Aim is to create a proveable comparison for Graph-back RAG versus Vector-only RA
 
 | Metric | Value |
 |--------|-------|
-| **Faithfulness (both strategies)** | **>0.96** — <4% of generated claims are unsupported by retrieved context |
-| **Graph Context Precision** | **0.78** — doubled from 0.49 via semantic re-ranking + adaptive retrieval depth |
-| **Context Recall** | **0.86-0.91** — both strategies capture >86% of ground-truth facts |
-| **Graph Generation Latency** | **~3.5s** — down from 12.8s (73% faster) after re-ranking + prompt optimization |
-| **Provenance Citations** | **8-10 per graph query** — focused via semantic re-ranking (was 34 pre-optimization) |
-| **Knowledge Graph** | **48 nodes, 72 relationships** across 9 entity types with full citation chains |
-| **Test Coverage** | **29/29 tests passed** — ingestion, retrieval (5 Cypher patterns), and evaluation |
-| **Evaluation Harness** | **11 gold-standard questions**, 5 categories, 5 RAGAS-style metrics, LLM-as-judge |
+| **Faithfulness (both strategies)** | **>0.96** with fewer than 4% of generated claims unsupported by retrieved context |
+| **Graph Context Precision** | **0.78**, doubled from 0.49 through semantic re-ranking and adaptive retrieval depth |
+| **Context Recall** | **0.86 to 0.91** across both strategies, capturing over 86% of ground-truth facts |
+| **Graph Generation Latency** | **~3.5s**, reduced from 12.8s (73% faster) after re-ranking and prompt optimization |
+| **Provenance Citations** | **8 to 10 per graph query**, focused through semantic re-ranking (previously 34 before optimization) |
+| **Knowledge Graph** | **48 nodes and 72 relationships** across 9 entity types with full citation chains |
+| **Test Coverage** | **29 of 29 tests passed** covering ingestion, retrieval (5 Cypher patterns), and evaluation |
+| **Evaluation Harness** | **11 gold-standard questions** across 5 categories, scored with 5 RAGAS-style metrics using LLM-as-judge |
 
 ---
 
 ## Skills Demonstrated
 
 ### Graph RAG (Neo4j + Cypher)
-- Designed a **medical property graph schema** (Patient, Condition, Symptom, Medication, Procedure, Vital, RiskFactor) with typed relationships and provenance edges
-- Wrote **5 composable Cypher retrieval patterns**: entity-first vector seeding, k-hop neighborhood expansion (APOC + pure Cypher fallback), relationship-constrained traversal, shortestPath reasoning chains, and provenance linking
-- Built **structured context bundles** that give the LLM entities, relationships, reasoning paths, and source citations — not just raw text chunks
-- Implemented **SOURCED_FROM provenance** with confidence scores and extraction method tracking, enabling full audit trails from answer → entity → source chunk → document
+- Designed a medical property graph schema with seven node types (Patient, Condition, Symptom, Medication, Procedure, Vital, RiskFactor), typed relationships, and provenance edges that form complete citation chains
+- Wrote five composable Cypher retrieval patterns: entity-first vector seeding, k-hop neighborhood expansion with APOC and a pure Cypher fallback, relationship-constrained traversal, shortestPath reasoning chains, and provenance linking
+- Built structured context bundles that provide the LLM with entities, relationships, reasoning paths, and source citations rather than raw text chunks alone
+- Implemented SOURCED_FROM provenance edges carrying confidence scores and extraction method metadata, enabling full audit trails from generated answer to extracted entity to source chunk to original document
 
 ### Vector RAG (ChromaDB + Embeddings)
-- Built a **pure vector baseline** using ChromaDB with cosine similarity (all-MiniLM-L6-v2, 384-dim) for fair comparison
-- Implemented **dual-write embeddings** at ingestion — chunks indexed in both Neo4j's native vector index and ChromaDB
-- Achieved **0.99 faithfulness and 0.90 context precision** on vector-only retrieval — strong baseline that validates embedding quality
+- Built a pure vector baseline using ChromaDB with cosine similarity over all-MiniLM-L6-v2 embeddings (384 dimensions) to serve as a fair comparison against the graph-backed approach
+- Implemented dual-write embeddings at ingestion time so that chunks are indexed in both Neo4j's native vector index and ChromaDB simultaneously
+- Achieved 0.99 faithfulness and 0.90 context precision on vector-only retrieval, establishing a strong baseline that validates the quality of the underlying embeddings
 
-### NLP & Ingestion
-- **LLM-based entity extraction** using Claude's tool_use API with schema-constrained JSON output (7 entity types, 11 relationship types)
-- **Two-pass entity resolution**: rapidfuzz fuzzy matching (88% threshold) + embedding-based semantic similarity (0.85 cosine threshold)
-- **Section-aware SOAP chunking** with assessment sub-splitting, character offsets, and document provenance
+### NLP and Ingestion
+- Performed LLM-based entity extraction using Claude's tool_use API with schema-constrained JSON output covering 7 entity types and 11 relationship types
+- Applied two-pass entity resolution combining rapidfuzz fuzzy string matching at an 88% threshold with embedding-based semantic similarity at a 0.85 cosine threshold to merge duplicate and variant entity references
+- Implemented section-aware SOAP chunking with assessment sub-splitting, character offset tracking, and document provenance metadata
 
-### Evaluation & Measurement
-- **RAGAS-style evaluation harness** with LLM-as-judge scoring (faithfulness, context precision, context recall, answer correctness, citation accuracy)
-- **Fair comparison design**: same embeddings model, same LLM, same prompt structure — only the retrieval strategy differs
-- Identified the **precision-vs-explainability trade-off** and closed 70% of the gap: graph RAG context precision improved from 0.49 to 0.78 (vs vector's 0.90) via semantic re-ranking, adaptive retrieval depth, and chunk deduplication
+### Evaluation and Measurement
+- Built a RAGAS-style evaluation harness using LLM-as-judge scoring across five metrics: faithfulness, context precision, context recall, answer correctness, and citation accuracy
+- Ensured a fair comparison design where both strategies share the same embeddings model, the same LLM, and the same prompt structure, with only the retrieval strategy differing between runs
+- Identified the precision-versus-explainability trade-off and closed 70% of the gap by improving graph RAG context precision from 0.49 to 0.78 (compared to vector's 0.90) through semantic re-ranking, adaptive retrieval depth, and chunk deduplication
 
 ---
 
-## Evaluation Results (Real Run — 11 Questions)
+## Evaluation Results (Real Run, 11 Questions)
 
 ### Aggregate Scores
 
 | Metric | Vector RAG | Graph RAG | Insight |
 |--------|------------|-----------|---------|
-| **Faithfulness** | 0.99 | **0.96** | Both excellent — <4% unsupported claims |
-| **Context Precision** | 0.90 | **0.78** | Gap narrowed from 0.41 to 0.12 after re-ranking |
-| **Context Recall** | 0.91 | 0.86 | Both capture >86% of ground-truth facts |
-| **Answer Correctness** | 0.83 | **0.80** | Near-parity (3% gap, was 8%) |
-| **Citation Accuracy** | n/a | **0.57** | Graph-only: improved from 0.41 via focused provenance |
+| **Faithfulness** | 0.99 | **0.96** | Both strategies score above 0.96, with fewer than 4% unsupported claims |
+| **Context Precision** | 0.90 | **0.78** | The gap narrowed from 0.41 to 0.12 after re-ranking was introduced |
+| **Context Recall** | 0.91 | 0.86 | Both strategies capture over 86% of ground-truth facts |
+| **Answer Correctness** | 0.83 | **0.80** | Near parity at a 3% gap, down from 8% before optimization |
+| **Citation Accuracy** | n/a | **0.57** | Graph-only metric that improved from 0.41 through focused provenance filtering |
 
 ### Per-Category Performance
 
@@ -74,11 +72,11 @@ Aim is to create a proveable comparison for Graph-back RAG versus Vector-only RA
 
 ### The Trade-off
 
-**Graph RAG now matches or beats vector on multi-hop reasoning** (1.00 faithfulness and context precision for multi-hop queries). The remaining gap is on simple single-hop and cross-reference queries where graph expansion adds little value — as expected.
+Graph RAG now matches or beats vector on multi-hop reasoning, scoring 1.00 for both faithfulness and context precision on multi-hop queries. The remaining gap appears on simple single-hop and cross-reference queries where graph expansion adds little value, which is the expected behavior.
 
-Graph RAG's differentiator is explainability: entity chains, reasoning paths, and provenance citations that let an analyst *prove* an answer, not just read one. After optimization (semantic re-ranking, adaptive depth, chunk deduplication), the precision trade-off is now just 12% — while retaining full provenance traceability.
+The core differentiator of graph RAG is explainability. Entity chains, reasoning paths, and provenance citations allow an analyst to prove an answer rather than simply read one. After optimization through semantic re-ranking, adaptive depth, and chunk deduplication, the precision trade-off has narrowed to just 12% while retaining full provenance traceability.
 
-Full results: **[outputs/results.md](outputs/results.md)** · Evaluation data: **[outputs/evaluation_report.json](outputs/evaluation_report.json)**
+Full results: **[outputs/results.md](outputs/results.md)** | Evaluation data: **[outputs/evaluation_report.json](outputs/evaluation_report.json)**
 
 ---
 
@@ -86,37 +84,37 @@ Full results: **[outputs/results.md](outputs/results.md)** · Evaluation data: *
 
 ```
 Medical Documents (SOAP notes + Demographics JSON)
-        │
-        ▼
-┌─────────────────────────────────────────────┐
-│            INGESTION PIPELINE                │
-│  Section-Aware Chunker → Claude Extraction   │
-│  Entity Resolution (fuzzy + semantic)        │
-│  Graph Writer + Dual Embedding Index         │
-└────────┬──────────────────────┬──────────────┘
-         │                      │
+        |
+        v
++---------------------------------------------+
+|            INGESTION PIPELINE                |
+|  Section-Aware Chunker -> Claude Extraction  |
+|  Entity Resolution (fuzzy + semantic)        |
+|  Graph Writer + Dual Embedding Index         |
++--------+----------------------+--------------+
+         |                      |
    Neo4j Property          ChromaDB Vector
    Graph (48 nodes,        Store (8 chunks,
     72 relationships)       384-dim embeddings)
-         │                      │
-         ▼                      ▼
-┌─────────────────┐    ┌──────────────────┐
-│   Graph RAG     │    │   Vector RAG     │
-│   5-stage       │    │   Single-stage   │
-│   Cypher        │    │   cosine search  │
-│   retrieval     │    │   (baseline)     │
-└────────┬────────┘    └────────┬─────────┘
-         │                      │
-         ▼                      ▼
+         |                      |
+         v                      v
++-----------------+    +------------------+
+|   Graph RAG     |    |   Vector RAG     |
+|   5-stage       |    |   Single-stage   |
+|   Cypher        |    |   cosine search  |
+|   retrieval     |    |   (baseline)     |
++--------+--------+    +--------+---------+
+         |                      |
+         v                      v
     Claude Sonnet (answer generation + citations)
-         │
-         ▼
-┌─────────────────────────────────────────────┐
-│          EVALUATION HARNESS                  │
-│  11 gold-standard questions · 5 categories   │
-│  LLM-as-judge · RAGAS-style metrics          │
-│  Side-by-side vector vs graph comparison      │
-└──────────────────────────────────────────────┘
+         |
+         v
++---------------------------------------------+
+|          EVALUATION HARNESS                  |
+|  11 gold-standard questions, 5 categories    |
+|  LLM-as-judge with RAGAS-style metrics       |
+|  Side-by-side vector vs graph comparison     |
++----------------------------------------------+
 ```
 
 ---
@@ -125,13 +123,13 @@ Medical Documents (SOAP notes + Demographics JSON)
 
 | # | Pattern | What It Does | Cypher Technique |
 |---|---------|--------------|------------------|
-| 1 | **Entity-First Retrieval** | Embed query → vector search → follow SOURCED_FROM edges to seed entities | `db.index.vector.queryNodes` + pattern match |
-| 2 | **K-Hop Expansion** | Expand seeds 1-3 hops to collect subgraph neighborhood | `[*1..$max_hops]` or `apoc.neighbors.byhop` |
-| 3 | **Relationship-Constrained** | Traverse only clinically relevant edge types | `[:HAS_CONDITION\|TREATED_WITH\|MANIFESTS_AS*1..3]` |
-| 4 | **Path-Based Reasoning** | Find shortest paths between entities for multi-hop chains | `shortestPath((a)-[*..6]-(b))` with same-node guard |
-| 5 | **Provenance Linking** | Trace every entity back to source text with confidence | `(e)-[:SOURCED_FROM]->(chunk)-[:BELONGS_TO]->(doc)` |
+| 1 | **Entity-First Retrieval** | Embeds the query, runs vector search, and follows SOURCED_FROM edges to discover seed entities | `db.index.vector.queryNodes` combined with pattern matching |
+| 2 | **K-Hop Expansion** | Expands seed entities by 1 to 3 hops to collect the surrounding subgraph neighborhood | `[*1..$max_hops]` variable-length paths or `apoc.neighbors.byhop` |
+| 3 | **Relationship-Constrained** | Traverses only clinically relevant edge types to filter noise from the expansion | `[:HAS_CONDITION\|TREATED_WITH\|MANIFESTS_AS*1..3]` |
+| 4 | **Path-Based Reasoning** | Finds shortest paths between entities to surface multi-hop reasoning chains | `shortestPath((a)-[*..6]-(b))` with a same-node guard |
+| 5 | **Provenance Linking** | Traces every entity back to its source text with an associated confidence score | `(e)-[:SOURCED_FROM]->(chunk)-[:BELONGS_TO]->(doc)` |
 
-These are assembled into a **structured context bundle** containing: seed entities, neighborhood nodes, relationship edges, reasoning paths, provenance citations, and raw source chunks — all serialized into a single LLM prompt.
+These five patterns are assembled into a structured context bundle containing seed entities, neighborhood nodes, relationship edges, reasoning paths, provenance citations, and raw source chunks. The bundle is then serialized into a single LLM prompt.
 
 ---
 
@@ -148,7 +146,7 @@ These are assembled into a **structured context bundle** containing: seed entiti
 (:SourceChunk)-[:NEXT]->(:SourceChunk)
 ```
 
-**9 node labels** · **11 relationship types** · **Provenance on every extracted entity**
+The schema uses 9 node labels and 11 relationship types. Every extracted entity carries provenance metadata linking it back to its source text.
 
 ---
 
@@ -198,12 +196,12 @@ curl http://localhost:8000/graph/explore/Hypertension?hops=2
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/ingest` | Ingest documents into the knowledge graph |
-| `POST` | `/query` | Ask questions (`strategy`: graph / vector / both) |
-| `GET` | `/graph/explore/{name}` | Explore k-hop subgraph around an entity |
-| `GET` | `/graph/schema` | Graph statistics (node/relationship counts) |
-| `POST` | `/evaluate` | Run side-by-side evaluation harness |
-| `GET` | `/health` | System health (Neo4j, Anthropic, embeddings, APOC) |
+| `POST` | `/ingest` | Ingests documents into the knowledge graph |
+| `POST` | `/query` | Accepts a question with a strategy parameter (graph, vector, or both) |
+| `GET` | `/graph/explore/{name}` | Explores the k-hop subgraph around a named entity |
+| `GET` | `/graph/schema` | Returns graph statistics including node and relationship counts |
+| `POST` | `/evaluate` | Runs the side-by-side evaluation harness |
+| `GET` | `/health` | Reports system health for Neo4j, Anthropic, embeddings, and APOC |
 
 ---
 
@@ -212,47 +210,46 @@ curl http://localhost:8000/graph/explore/Hypertension?hops=2
 ```
 Medical_Doc_Knowledge_Graph_System/
 ├── app/
-│   ├── main.py                  # FastAPI entrypoint + lifespan
-│   ├── config.py                # Pydantic settings from .env
+│   ├── main.py                  # FastAPI entrypoint and lifespan management
+│   ├── config.py                # Pydantic settings loaded from .env
 │   ├── models/schema.py         # All Pydantic models
 │   ├── graph/
 │   │   ├── connection.py        # Neo4j driver management
-│   │   ├── schema_setup.py      # Constraint/index DDL
+│   │   ├── schema_setup.py      # Constraint and index DDL
 │   │   └── queries.py           # Reusable Cypher templates
 │   ├── ingestion/
 │   │   ├── chunker.py           # SOAP section-aware text splitter
 │   │   ├── extractor.py         # Claude tool_use entity extraction
-│   │   ├── entity_resolver.py   # Fuzzy + semantic dedup
-│   │   ├── graph_writer.py      # Neo4j upsert + ChromaDB dual-write
-│   │   └── pipeline.py          # Orchestrator
+│   │   ├── entity_resolver.py   # Fuzzy and semantic deduplication
+│   │   ├── graph_writer.py      # Neo4j upsert with ChromaDB dual-write
+│   │   └── pipeline.py          # Ingestion orchestrator
 │   ├── retrieval/
-│   │   ├── entity_first.py      # Vector seed → graph entities
-│   │   ├── k_hop_expansion.py   # Neighborhood expansion (APOC + Cypher)
+│   │   ├── entity_first.py      # Vector seed to graph entity mapping
+│   │   ├── k_hop_expansion.py   # Neighborhood expansion via APOC and Cypher
 │   │   ├── relationship_filter.py # Clinically-constrained traversal
 │   │   ├── path_reasoning.py    # Shortest-path reasoning chains
-│   │   ├── provenance.py        # Source-of-truth citations
-│   │   ├── context_builder.py   # Structured context bundle assembler
-│   │   └── utils.py             # Neo4j type sanitization
+│   │   ├── provenance.py        # Source-of-truth citation linking
+│   │   ├── context_builder.py   # Structured context bundle assembler with re-ranking
+│   │   └── utils.py             # Neo4j type sanitization utilities
 │   ├── rag/
 │   │   ├── embeddings.py        # sentence-transformers (all-MiniLM-L6-v2)
-│   │   ├── llm_client.py        # Anthropic Claude wrapper + retry
+│   │   ├── llm_client.py        # Anthropic Claude wrapper with retry logic
 │   │   ├── vector_rag.py        # ChromaDB-only baseline
-│   │   └── graph_rag.py         # Full graph-backed RAG
+│   │   └── graph_rag.py         # Full graph-backed RAG pipeline
 │   └── evaluation/
-│       ├── questions.py          # 11 gold-standard questions (5 categories)
+│       ├── questions.py          # 11 gold-standard questions across 5 categories
 │       ├── metrics.py            # RAGAS-style LLM-as-judge metrics
 │       ├── harness.py            # Side-by-side evaluation runner
 │       └── report.py             # Markdown report generator
 ├── tests/                        # 29 unit tests
-├── outputs/                      # Results, evaluation data, charts
+├── outputs/                      # Results, evaluation data, and charts
 │   ├── results.md                # Full results write-up
-│   ├── evaluation_report.json    # Complete evaluation (22 records)
+│   ├── evaluation_report.json    # Complete evaluation with 22 records
 │   └── test_results.txt          # Pytest log
-├── Task_Files/                   # Input documents (SOAP notes + demographics)
+├── Task_Files/                   # Input documents (SOAP notes and demographics)
 ├── docker-compose.yml
 ├── requirements.txt
 ├── .env.example
-├── study_packet.md               # Interview prep (15 sections + glossary)
 └── README.md
 ```
 
@@ -262,14 +259,14 @@ Medical_Doc_Knowledge_Graph_System/
 
 | Decision | Rationale |
 |----------|-----------|
-| **Neo4j 5.26 native vector index** | Eliminates need for external vector DB in graph RAG path; single query language (Cypher) for both vector and graph retrieval |
-| **APOC Extended auto-detection** | APOC `neighbors.byhop` for k-hop when available; pure Cypher variable-length path fallback ensures portability |
-| **Claude Sonnet (tool_use API)** | Schema-constrained structured extraction — no regex parsing, no hallucinated entity types |
-| **all-MiniLM-L6-v2 (384-dim)** | CPU-only local embeddings; zero API cost, ~5ms per query |
-| **ChromaDB for vector baseline** | Isolated vector store ensures fair comparison — vector RAG has zero graph context |
-| **Dual-write embeddings** | Chunks indexed in both Neo4j and ChromaDB at ingestion time; both strategies use the same embeddings |
-| **Per-label Cypher MERGE** | Dynamic-label MERGE is illegal in Cypher; `apoc.merge.node()` used when APOC available |
-| **Exponential backoff on API calls** | Handles Anthropic rate limits gracefully with tenacity retry |
+| **Neo4j 5.26 native vector index** | Eliminates the need for an external vector database in the graph RAG path, allowing a single query language (Cypher) for both vector and graph retrieval |
+| **APOC Extended auto-detection** | Uses APOC `neighbors.byhop` for k-hop expansion when available, with a pure Cypher variable-length path fallback to ensure portability across environments |
+| **Claude Sonnet (tool_use API)** | Provides schema-constrained structured extraction without regex parsing and without risk of hallucinated entity types |
+| **all-MiniLM-L6-v2 (384-dim)** | Runs entirely on CPU with zero API cost and approximately 5ms latency per query embedding |
+| **ChromaDB for vector baseline** | Serves as an isolated vector store to ensure a fair comparison where vector RAG has zero graph context |
+| **Dual-write embeddings** | Indexes chunks in both Neo4j and ChromaDB at ingestion time so that both strategies operate on identical embeddings |
+| **Per-label Cypher MERGE** | Works around the Cypher limitation that dynamic-label MERGE is illegal by using `apoc.merge.node()` when APOC is available |
+| **Exponential backoff on API calls** | Handles Anthropic rate limits gracefully using the tenacity retry library |
 
 ---
 
