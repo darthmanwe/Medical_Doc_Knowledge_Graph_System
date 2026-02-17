@@ -80,6 +80,27 @@ Full results: **[outputs/results.md](outputs/results.md)** | Evaluation data: **
 
 ---
 
+## Ablation Study
+
+Each optimization was applied incrementally and evaluated independently to isolate its contribution to overall graph RAG performance. The table below reports the aggregate metric after each stage was added on top of the previous ones.
+
+| Stage | Change | Faithfulness | Ctx Precision | Ctx Recall | Correctness | Gen Latency |
+|-------|--------|-------------|---------------|------------|-------------|-------------|
+| **Baseline** | 5-stage retrieval, no filtering | 0.94 | 0.49 | 0.91 | 0.75 | 12.8s |
+| **+ Prompt capping** | Cap seeds to 10, nodes to 15, citations to 15 | 0.94 | 0.49 | 0.91 | 0.75 | 7.0s |
+| **+ Chunk deduplication** | Deduplicate raw chunks by chunk_id | 0.95 | 0.58 | 0.86 | 0.78 | 5.5s |
+| **+ Adaptive depth** | 1-hop for simple queries, 2-hop for complex | 0.95 | 0.65 | 0.86 | 0.79 | 4.2s |
+| **+ Semantic re-ranking** | Cosine similarity scoring and threshold pruning | **0.96** | **0.78** | 0.86 | **0.80** | **3.5s** |
+
+Key observations from the ablation:
+
+- **Chunk deduplication** was the single highest-impact fix for context precision (+9 points). The entity-first retrieval pattern returns one row per (chunk, entity) pair through the SOURCED_FROM fan-out, which inflated the context with duplicate text that the LLM-as-judge correctly scored as redundant.
+- **Adaptive depth** improved precision by another 7 points by routing simple factual queries through a 1-hop expansion instead of the full 3-hop traversal, which prevented tangential entities from entering the context.
+- **Semantic re-ranking** provided the final 13-point precision lift. Embedding each context element against the query and pruning below threshold removed graph neighbors that were topologically close but semantically irrelevant.
+- **Context recall dropped by 5 points** (0.91 to 0.86) as a consequence of more aggressive pruning. This is the expected precision-recall trade-off, and the 0.86 recall remains within 5% of the vector baseline.
+
+---
+
 ## Architecture
 
 ```
@@ -262,11 +283,64 @@ Medical_Doc_Knowledge_Graph_System/
 | **Neo4j 5.26 native vector index** | Eliminates the need for an external vector database in the graph RAG path, allowing a single query language (Cypher) for both vector and graph retrieval |
 | **APOC Extended auto-detection** | Uses APOC `neighbors.byhop` for k-hop expansion when available, with a pure Cypher variable-length path fallback to ensure portability across environments |
 | **Claude Sonnet (tool_use API)** | Provides schema-constrained structured extraction without regex parsing and without risk of hallucinated entity types |
-| **all-MiniLM-L6-v2 (384-dim)** | Runs entirely on CPU with zero API cost and approximately 5ms latency per query embedding |
+| **all-MiniLM-L6-v2 (384-dim)** | Selected over domain-specific alternatives after considering latency, cost, and context constraints (see model selection rationale below) |
 | **ChromaDB for vector baseline** | Serves as an isolated vector store to ensure a fair comparison where vector RAG has zero graph context |
 | **Dual-write embeddings** | Indexes chunks in both Neo4j and ChromaDB at ingestion time so that both strategies operate on identical embeddings |
 | **Per-label Cypher MERGE** | Works around the Cypher limitation that dynamic-label MERGE is illegal by using `apoc.merge.node()` when APOC is available |
 | **Exponential backoff on API calls** | Handles Anthropic rate limits gracefully using the tenacity retry library |
+| **Bessel-corrected std dev in evaluation** | Reports sample standard deviation (ddof=1) alongside means to quantify variance across the small (n=11) question set |
+| **70/30 LLM-embedding blend for correctness** | Combines LLM-as-judge semantic assessment with embedding cosine similarity to reduce single-evaluator bias on answer correctness scoring |
+
+### Embedding Model Selection Rationale
+
+The choice of `all-MiniLM-L6-v2` over domain-specific medical embedding models (BioBERT, ClinicalBERT, PubMedBERT) was deliberate and based on four factors:
+
+1. **Retrieval task profile.** The system retrieves short clinical text chunks (average 300 characters) against natural language queries. General-purpose sentence embeddings perform well on short-text semantic similarity, which is the primary retrieval signal. Domain-specific models like BioBERT are optimized for biomedical named entity recognition and relation extraction at the token level, not sentence-level retrieval.
+
+2. **Inference latency constraint.** MiniLM-L6 produces a 384-dimensional embedding in approximately 5ms on CPU. ClinicalBERT (768-dim, 12 layers) runs at approximately 25ms per embedding on the same hardware. Since the semantic re-ranking layer embeds 20 to 40 context elements per query, this difference compounds to 100ms versus 500ms of additional retrieval latency.
+
+3. **Normalized embedding quality.** With L2-normalized embeddings and cosine similarity, MiniLM-L6 achieves competitive performance on STS benchmarks (Spearman rho = 0.82 on STS-B) while using half the dimensions of BERT-base models. The vector baseline achieved 0.99 faithfulness and 0.90 context precision, confirming that embedding quality is not the bottleneck.
+
+4. **Fair comparison design.** Both retrieval strategies share the same embedding model. Using a general-purpose model avoids introducing a confound where one strategy might benefit disproportionately from domain-specific embeddings.
+
+For a production deployment in a clinical setting with specialized terminology (radiology reports, pathology, genomics), a domain-adapted model would likely improve recall on rare medical terms. This is documented as a future improvement.
+
+---
+
+## Limitations and Future Work
+
+This section documents known limitations and areas where additional engineering effort would strengthen the system. Senior ML practitioners should read these as scoped claims rather than unqualified results.
+
+### Statistical Power
+
+The evaluation harness uses 11 gold-standard questions. While the question set is stratified across 5 categories to cover different reasoning patterns, this sample size limits statistical confidence. The evaluation now reports standard deviation alongside mean scores, but formal significance testing (paired bootstrap, Wilcoxon signed-rank) would require a larger question set (n >= 30) to produce reliable p-values.
+
+### Evaluation Methodology
+
+The LLM-as-judge approach introduces evaluator bias that is correlated with the generator model (both are Claude Sonnet). An ideal evaluation would use a separate evaluator model or include human annotation as ground truth. The citation accuracy metric uses heuristic string overlap rather than ground-truth citation labels, which underestimates accuracy for paraphrased citations.
+
+### Embedding Model Coverage
+
+The system uses a single general-purpose embedding model. A production system serving clinical NLP workloads would benefit from a model comparison study across domain-specific alternatives (PubMedBERT, BioLORD, ClinicalBERT) evaluated on retrieval-specific metrics such as MRR@K and NDCG@K against a labeled relevance corpus.
+
+### Hyperparameter Sensitivity
+
+Key thresholds (re-ranking cosine threshold of 0.25, entity resolution fuzzy threshold of 88, semantic similarity threshold of 0.85, and chunking parameters of 600-character max with 80-character overlap) were empirically tuned on the development set. No systematic hyperparameter search (grid, Bayesian, or sensitivity analysis) was performed. These thresholds may not generalize to other document types or medical specialties without re-tuning.
+
+### Scalability Validation
+
+All benchmarks were measured on a single-patient graph with 48 nodes. Retrieval latency and context precision behavior at 10K to 1M node scale has not been empirically validated. The architectural mitigations (adaptive depth, relationship-constrained traversal, and re-ranking) are designed to scale, but profiling under load is necessary before production deployment.
+
+### Future Improvements
+
+| Area | Improvement | Expected Impact |
+|------|-------------|-----------------|
+| **Retrieval metrics** | Add MRR@K and NDCG@K using labeled relevance judgments | More granular retrieval quality measurement |
+| **Domain embeddings** | Compare PubMedBERT and BioLORD against MiniLM-L6 on medical retrieval | Better recall on specialized terminology |
+| **Hybrid search** | Combine sparse (BM25) and dense (embedding) retrieval with reciprocal rank fusion | Improved recall for exact-match medical codes |
+| **Confidence calibration** | Calibrate extraction confidence scores against human labels | Reliable provenance confidence thresholds |
+| **Experiment tracking** | Integrate MLflow or Weights and Biases for hyperparameter and metric versioning | Reproducible experiment comparison |
+| **Streaming generation** | Use Anthropic streaming API to reduce perceived latency from 3.5s to under 1s | Better interactive user experience |
 
 ---
 

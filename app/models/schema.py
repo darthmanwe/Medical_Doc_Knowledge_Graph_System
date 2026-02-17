@@ -232,10 +232,19 @@ class EvaluationRecord(BaseModel):
     generation_time_ms: float
 
 
+class AggregateMetrics(BaseModel):
+    """Aggregate statistics for a set of evaluation records (mean and std dev)."""
+    mean: MetricScores
+    std_dev: MetricScores
+    n: int
+
+
 class EvaluationReport(BaseModel):
     """Full comparison report."""
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     records: list[EvaluationRecord] = Field(default_factory=list)
     vector_avg_scores: Optional[MetricScores] = None
     graph_avg_scores: Optional[MetricScores] = None
+    vector_aggregate: Optional[AggregateMetrics] = None
+    graph_aggregate: Optional[AggregateMetrics] = None
     summary: str = ""
